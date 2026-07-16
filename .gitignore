@@ -1,0 +1,12 @@
+# dependencies
+node_modules/
+
+# build output (GitHub Actions rebuilds this; no need to commit it)
+dist/
+
+# local env / editor / OS cruft
+.DS_Store
+*.local
+.vscode/
+.idea/
+npm-debug.log*
