@@ -162,14 +162,17 @@ function FeelSlider({ value, onChange }) {
 // ════════════════════════════════════════════════════════════════════
 //  SET WIDGET — goal reps pre-fill so logging is a couple of taps
 // ════════════════════════════════════════════════════════════════════
-function SetWidget({ num, isWarmup, lastSet, existing, goalReps, onDone }) {
+function SetWidget({ num, isWarmup, lastSet, carryWeight, existing, goalReps, onDone }) {
+  // Weight priority: what you're already lifting today > what you lifted
+  // for this set number last time. Set 1 has nothing to carry, so it
+  // seeds from last session; sets 2+ inherit from the set just logged.
   const [weight, setWeight] = useState(
-    existing ? existing.weight : (lastSet?.weight ?? null))
-  // Reps start at the goal for this exercise — that's the whole point of
-  // setting a goal during workout creation.
+    existing ? existing.weight : (carryWeight ?? lastSet?.weight ?? null))
+  // Reps default to the goal set during workout creation — that's the
+  // number you're aiming for on every set.
   const [reps, setReps] = useState(
     existing ? existing.reps
-      : (isWarmup ? null : (lastSet?.reps ?? goalReps ?? null)))
+      : (isWarmup ? null : (goalReps ?? lastSet?.reps ?? null)))
   const [feel, setFeel] = useState(existing ? (existing.feel ?? null) : null)
   const adj = (setter, d) => setter(v => parseFloat(Math.max(0, (v ?? 0) + d).toFixed(1)))
   const editing = !!existing
@@ -232,7 +235,7 @@ function Sheet({ title, titleTone = 'red', children, onClose, closeLabel = 'Clos
   )
 }
 
-function LoggingSheet({ setNum, isWarmup, lastSet, existing, goalReps, onDone, onClose }) {
+function LoggingSheet({ setNum, isWarmup, lastSet, carryWeight, existing, goalReps, onDone, onClose }) {
   return (
     <div className="sheet-overlay" onClick={onClose}>
       <div className="log-sheet" onClick={e => e.stopPropagation()}>
@@ -251,6 +254,7 @@ function LoggingSheet({ setNum, isWarmup, lastSet, existing, goalReps, onDone, o
           </div>
         )}
         <SetWidget num={setNum} isWarmup={isWarmup} lastSet={lastSet}
+          carryWeight={carryWeight}
           existing={existing} goalReps={goalReps} onDone={onDone} />
       </div>
     </div>
@@ -370,8 +374,12 @@ function LoggingScreen({
   const [showDetails, setShowDetails] = useState(false)
   const [showSwap, setShowSwap] = useState(false)
 
-  const workingCount = sets.filter(s => !s.isWarmup).length
+  const workingSets = sets.filter(s => !s.isWarmup)
+  const workingCount = workingSets.length
   const lastForNextSet = lastTime && lastTime[workingCount] ? lastTime[workingCount] : null
+  // Whatever you're lifting right now carries to the next set.
+  const carryWeight = workingCount > 0
+    ? workingSets[workingCount - 1].weight : null
 
   const editSet = (index) => {
     const s = sets[index]
@@ -460,6 +468,7 @@ function LoggingScreen({
         <LoggingSheet
           setNum={sheet.setNum} isWarmup={sheet.isWarmup}
           lastSet={sheet.isWarmup ? null : lastForNextSet}
+          carryWeight={sheet.isWarmup || sheet.mode === 'edit' ? null : carryWeight}
           existing={sheet.mode === 'edit' ? sheet.existing : null}
           goalReps={goalReps}
           onDone={(s) => {
