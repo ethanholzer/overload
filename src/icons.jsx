@@ -149,3 +149,94 @@ export function SmallChevronRight({ color = '#FFFFFF', size = 24 }) {
     </svg>
   )
 }
+
+// ─── round 4 additions ──────────────────────────────────────────────
+// Material-style 24px glyphs matching the set above.
+
+// Vertical up/down chevrons for the sets / reps steppers and the
+// Today's Plan reorder controls.
+export function SmallChevronUp({ color = '#111111', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M12 9.8L7.4 14.4L6 13L12 7L18 13L16.6 14.4L12 9.8Z" fill={color} />
+    </svg>
+  )
+}
+
+export function SmallChevronDown({ color = '#111111', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M12 14.2L16.6 9.6L18 11L12 17L6 11L7.4 9.6L12 14.2Z" fill={color} />
+    </svg>
+  )
+}
+
+// Remove an exercise from a workout being built.
+export function Close({ color = '#111111', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M6.4 19L5 17.6L10.6 12L5 6.4L6.4 5L12 10.6L17.6 5L19 6.4L13.4 12L19 17.6L17.6 19L12 13.4L6.4 19Z" fill={color} />
+    </svg>
+  )
+}
+
+// Per-workout options (delete / edit).
+export function KebabMenu({ color = '#111111', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M6 14C4.9 14 4 13.1 4 12C4 10.9 4.9 10 6 10C7.1 10 8 10.9 8 12C8 13.1 7.1 14 6 14ZM12 14C10.9 14 10 13.1 10 12C10 10.9 10.9 10 12 10C13.1 10 14 10.9 14 12C14 13.1 13.1 14 12 14ZM18 14C16.9 14 16 13.1 16 12C16 10.9 16.9 10 18 10C19.1 10 20 10.9 20 12C20 13.1 19.1 14 18 14Z" fill={color} />
+    </svg>
+  )
+}
+
+export function Trash({ color = '#FFFFFF', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M7 21C6.45 21 5.97917 20.8042 5.5875 20.4125C5.19583 20.0208 5 19.55 5 19V6H4V4H9V3H15V4H20V6H19V19C19 19.55 18.8042 20.0208 18.4125 20.4125C18.0208 20.8042 17.55 21 17 21H7ZM17 6H7V19H17V6ZM9 17H11V8H9V17ZM13 17H15V8H13V17Z" fill={color} />
+    </svg>
+  )
+}
+
+// Exercise details (laterality + setup).
+export function Gear({ color = '#FFFFFF', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M9.25 22L8.85 18.8C8.63333 18.7167 8.42917 18.6167 8.2375 18.5C8.04583 18.3833 7.85833 18.2583 7.675 18.125L4.7 19.375L1.95 14.625L4.525 12.675C4.50833 12.5583 4.5 12.4458 4.5 12.3375V11.6625C4.5 11.5542 4.50833 11.4417 4.525 11.325L1.95 9.375L4.7 4.625L7.675 5.875C7.85833 5.74167 8.05 5.61667 8.25 5.5C8.45 5.38333 8.65 5.28333 8.85 5.2L9.25 2H14.75L15.15 5.2C15.3667 5.28333 15.5708 5.38333 15.7625 5.5C15.9542 5.61667 16.1417 5.74167 16.325 5.875L19.3 4.625L22.05 9.375L19.475 11.325C19.4917 11.4417 19.5 11.5542 19.5 11.6625V12.3375C19.5 12.4458 19.4833 12.5583 19.45 12.675L22.025 14.625L19.275 19.375L16.325 18.125C16.1417 18.2583 15.95 18.3833 15.75 18.5C15.55 18.6167 15.35 18.7167 15.15 18.8L14.75 22H9.25ZM12.05 15.5C13.0167 15.5 13.8417 15.1583 14.525 14.475C15.2083 13.7917 15.55 12.9667 15.55 12C15.55 11.0333 15.2083 10.2083 14.525 9.525C13.8417 8.84167 13.0167 8.5 12.05 8.5C11.0667 8.5 10.2375 8.84167 9.5625 9.525C8.8875 10.2083 8.55 11.0333 8.55 12C8.55 12.9667 8.8875 13.7917 9.5625 14.475C10.2375 15.1583 11.0667 15.5 12.05 15.5Z" fill={color} />
+    </svg>
+  )
+}
+
+// Swap the current exercise for another in the same muscle group.
+export function Swap({ color = '#FFFFFF', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M6.99 11L3 15L6.99 19V16H14V14H6.99V11ZM21 9L17.01 5V8H10V10H17.01V13L21 9Z" fill={color} />
+    </svg>
+  )
+}
+
+// Jump back to Today's Plan from the logging screen.
+export function List({ color = '#FFFFFF', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M3 13H5V11H3V13ZM3 17H5V15H3V17ZM3 9H5V7H3V9ZM7 13H21V11H7V13ZM7 17H21V15H7V17ZM7 7V9H21V7H7Z" fill={color} />
+    </svg>
+  )
+}
+
+export function Search({ color = '#111111', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M19.6 21L13.3 14.7C12.8 15.1 12.225 15.4167 11.575 15.65C10.925 15.8833 10.2333 16 9.5 16C7.68333 16 6.14583 15.3708 4.8875 14.1125C3.62917 12.8542 3 11.3167 3 9.5C3 7.68333 3.62917 6.14583 4.8875 4.8875C6.14583 3.62917 7.68333 3 9.5 3C11.3167 3 12.8542 3.62917 14.1125 4.8875C15.3708 6.14583 16 7.68333 16 9.5C16 10.2333 15.8833 10.925 15.65 11.575C15.4167 12.225 15.1 12.8 14.7 13.3L21 19.6L19.6 21ZM9.5 14C10.75 14 11.8125 13.5625 12.6875 12.6875C13.5625 11.8125 14 10.75 14 9.5C14 8.25 13.5625 7.1875 12.6875 6.3125C11.8125 5.4375 10.75 5 9.5 5C8.25 5 7.1875 5.4375 6.3125 6.3125C5.4375 7.1875 5 8.25 5 9.5C5 10.75 5.4375 11.8125 6.3125 12.6875C7.1875 13.5625 8.25 14 9.5 14Z" fill={color} />
+    </svg>
+  )
+}
+
+// Selected-state checkmark inside the details sheet checkboxes.
+export function Check({ color = '#FFFFFF', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M9.55 17.6L4 12.05L5.4 10.65L9.55 14.8L18.6 5.75L20 7.15L9.55 17.6Z" fill={color} />
+    </svg>
+  )
+}

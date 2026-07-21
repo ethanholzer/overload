@@ -1,137 +1,368 @@
 /* ═══════════════════════════════════════════════════════════════════
-   OVERLOAD — built against Figma "Ready For Dev"
-   Values read from the node tree, not eyeballed.
+   OVERLOAD
+   Colour semantics: cream = planning, violet = workouts, red = exercises
    ═══════════════════════════════════════════════════════════════════ */
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
-input[type="number"] { -moz-appearance: textfield; }
-
-#root { max-width: none; margin: 0; padding: 0; text-align: left; width: 100%; }
-body { display: block; place-items: normal; min-width: 0; }
-
 :root {
-  --ink:#111111;
-  --cream:#F4EFE6;
-  --white:#FFFFFF;
-  --violet:#6C5CE7;
-  --coral:#F0573F;
-  --coral-dk:#D2452F;
-  --mustard:#F5B82E;
-  --mustard-dk:#E0A416;
-  --blue:#2D9CDB;
-  --warmup:#828282;
-  --sub:#C2C2C2;
-  --muted:#555451;
-  --panel-label:#85827E;
-  --hint:#BDBDBD;
-  --step:#666666;
-  --g999:#999999;
-  --gbbb:#BBBBBB;
-  --badge-bg:#DBDBDB;
-  --line:#DDD6C8;
+  --cream:      #F4EFE6;
+  --cream-dk:   #ECE6DA;
+  --violet:     #6C5CE7;
+  --violet-dk:  #5346C4;
+  --violet-sel: #6556D6;
+  --coral:      #F0573F;
+  --coral-dk:   #D2452F;
+  --mustard:    #F5B82E;
+  --mustard-dk: #E0A416;
+  --ink:        #111111;
+  --white:      #FFFFFF;
+  --hint:       #BDBDBD;
+  --muted:      #737373;
+  --warmup:     #C2C2C2;
+  --badge-bg:   #DBDBDB;
 }
 
-html, body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  background: #E5E1DA;
   -webkit-font-smoothing: antialiased;
-  background: #2a2a2a;
 }
 
+/* League Gothic is the display face for every big title. */
+.display {
+  font-family: 'League Gothic', 'Inter', sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+button { font-family: inherit; }
+input, textarea { font-family: inherit; }
+
+/* Every screen is a 393x852 phone frame. */
 .start-screen, .plan-screen, .sel-screen, .cw-screen, .ce-screen,
 .cm-screen, .cfg-screen, .log-screen, .done-screen, .hist-screen {
   position: relative;
   width: 393px;
-  min-height: 852px;
+  height: 852px;
   margin: 0 auto;
   overflow: hidden;
 }
 
 /* ═══ SHARED ═════════════════════════════════════════════════════════ */
-.hdr { display: flex; align-items: center; gap: 16px; padding: 40px 20px 0; }
+.hdr { display: flex; align-items: center; gap: 12px; padding: 64px 20px 16px; flex-shrink: 0; }
 .hdr-back {
-  width: 48px; height: 48px; border-radius: 1000px; flex-shrink: 0;
-  border: none; cursor: pointer; padding: 0;
+  width: 48px; height: 48px; border-radius: 1000px; border: none; cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.hdr-title { font-size: 54px; line-height: 48px; overflow-wrap: anywhere; }
+
+/* Tone = which part of the app you're in. */
+.hdr-violet { background: var(--violet); }
+.hdr-violet .hdr-back { background: var(--white); }
+.hdr-violet .hdr-back svg path { fill: var(--violet); }
+.hdr-violet .hdr-title { color: var(--white); }
+
+.hdr-cream { background: var(--cream); }
+.hdr-cream .hdr-back { background: var(--violet); }
+.hdr-cream .hdr-title { color: var(--violet); }
+
+.hdr-red { background: var(--coral); }
+.hdr-red .hdr-back { background: var(--white); }
+.hdr-red .hdr-back svg path { fill: var(--coral); }
+.hdr-red .hdr-title { color: var(--white); }
+
+.hdr-plain { background: transparent; }
+.hdr-plain .hdr-back { background: rgba(255,255,255,0.2); }
+.hdr-plain .hdr-title { color: var(--white); }
+
+.row-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: #555451;
+}
+.row-label.on-red { color: rgba(255,255,255,0.75); }
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: #666666;
+}
+.list-name { font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; }
+.list-sub { font-size: 14px; font-weight: 400; color: var(--muted); }
+.icon-btn { background: none; border: none; cursor: pointer; padding: 0; display: flex; flex-shrink: 0; }
+.muscle-icon { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+
+/* ═══ START PAGE (cream = planning) ══════════════════════════════════ */
+.start-screen { background: var(--cream); overflow-y: auto; padding-bottom: 32px; }
+.start-toolbar { display: flex; justify-content: flex-end; padding: 32px 20px 0; }
+.history-btn {
+  height: 40px; padding: 0 16px; border: none; cursor: pointer; border-radius: 1000px;
+  background: var(--mustard); color: var(--ink);
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.start-head { padding: 32px 20px 0; }
+.start-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: #666666;
+}
+/* Wordmark: a white ghost offset behind the violet face. */
+.overload-stack { position: relative; height: 100px; margin-top: 4px; }
+.ol-back, .ol-front {
+  position: absolute; left: 0; top: 0;
+  font-family: 'League Gothic', sans-serif; font-size: 112px; line-height: 100px;
+  text-transform: uppercase; white-space: nowrap;
+}
+.ol-back { color: var(--white); }
+.ol-front { color: var(--violet); top: 5px; }
+
+.start-section { padding: 32px 20px 0; display: flex; flex-direction: column; gap: 12px; }
+
+/* ─── workout card (violet 0-blur shadow = this is a WORKOUT) ─── */
+.wk-card {
+  background: var(--white); border-radius: 16px; padding: 16px;
+  box-shadow: 8px 8px 0 0 var(--violet);
+  display: flex; flex-direction: column; gap: 12px;
+  margin-right: 8px;   /* leave room for the offset shadow */
+}
+.wk-card-top { display: flex; align-items: flex-start; gap: 12px; }
+.wk-card-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.wk-card-name {
+  font-size: 24px; font-weight: 900; color: #000000;
+  letter-spacing: -0.5px; overflow-wrap: anywhere;
+}
+.wk-badge {
+  align-self: flex-start; background: var(--coral); color: var(--white);
+  border-radius: 8px; padding: 4px 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap;
+}
+.wk-kebab { background: none; border: none; cursor: pointer; padding: 0; display: flex; flex-shrink: 0; }
+.wk-cta {
+  height: 39px; border: none; cursor: pointer; border-radius: 1000px;
+  background: var(--ink); color: var(--white);
+  font-size: 14px; font-weight: 800; letter-spacing: 0.3px;
+}
+.wk-cta.small { align-self: flex-end; padding: 0 20px; }
+
+/* Calendar chip on today's card. */
+.cal-chip {
+  width: 44px; height: 46px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+  border: 1px solid var(--violet); background: var(--white);
+  display: flex; flex-direction: column; align-items: center;
+}
+.cal-chip-month {
+  width: 100%; height: 16px; background: var(--violet); color: var(--white);
+  font-size: 8px; font-weight: 900; letter-spacing: 0.5px;
   display: flex; align-items: center; justify-content: center;
 }
-.hdr-back.on-violet { background: var(--cream); }
-.hdr-back.on-cream  { background: var(--mustard); }
-.hdr-back.on-coral  { background: var(--white); }
-.hdr-back.on-ink    { background: var(--ink); }
-
-.display {
-  font-family: 'League Gothic', Impact, sans-serif;
-  font-weight: 400; letter-spacing: -1.5px; text-transform: uppercase;
+.cal-chip-day {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; color: var(--ink);
 }
-.hdr-title { font-size: 54px; line-height: 48px; }
-.hdr-title.cream   { color: var(--cream); }
-.hdr-title.white   { color: var(--white); }
-.hdr-title.mustard { color: var(--mustard); }
-.hdr-title.ink     { color: var(--ink); }
 
-.row-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-.row-label.on-cream  { color: var(--muted); opacity: 0.7; }
-.row-label.on-panel  { color: var(--panel-label); opacity: 0.7; }
-.row-label.on-violet { color: var(--white); opacity: 0.7; }
-.row-label.on-coral  { color: var(--white); opacity: 0.7; }
-.row-label.on-white  { color: var(--ink); opacity: 0.7; }
-
-.list-name { font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; }
-.list-sub  { font-family: 'Gabarito', 'Inter', sans-serif; font-size: 14px; font-weight: 400; color: var(--sub); }
-
-.icon-btn { background: none; border: none; cursor: pointer; padding: 0; display: flex; }
-.muscle-icon { border-radius: 50%; object-fit: cover; flex-shrink: 0; display: block; }
-
-/* ═══ START PAGE ═════════════════════════════════════════════════════ */
-.start-screen { background: var(--cream); padding: 32px 20px 0; display: flex; flex-direction: column; gap: 16px; }
-.start-toolbar { display: flex; justify-content: flex-end; height: 40px; }
-.history-btn {
-  height: 40px; padding: 8px 16px; border: none; cursor: pointer;
-  border-radius: 1000px; background: var(--mustard);
-  display: inline-flex; align-items: center; gap: 8px;
-  font-family: inherit; font-size: 14px; font-weight: 800; line-height: 15px;
-  color: var(--ink); text-transform: uppercase;
-}
-.start-head { display: flex; flex-direction: column; gap: 3px; }
-.start-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--step); text-transform: uppercase; }
-
-.overload-stack { position: relative; height: 105px; }
-.overload-stack span {
-  position: absolute; left: 0; top: 0;
-  font-family: 'League Gothic', Impact, sans-serif; font-weight: 400;
-  font-size: 112px; line-height: 100px; letter-spacing: -3px; white-space: pre;
-}
-.overload-stack .ol-back  { color: var(--white); }
-.overload-stack .ol-front { color: var(--violet); top: 5px; }
-
-.cal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+/* ─── weekly calendar ─── */
+.cal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .cal-cell {
-  height: 108px; border-radius: 28px; padding: 12px 16px;
-  border: 3px dashed var(--hint); background: transparent;
-  display: flex; flex-direction: column; gap: 16px; align-items: flex-start;
-  cursor: pointer; font-family: inherit; text-align: left; transition: transform .1s;
+  min-height: 108px; border-radius: 28px; padding: 12px 16px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  cursor: pointer; text-align: left; border: none; background: var(--white);
 }
-.cal-cell:hover { transform: translateY(-2px); }
-.cal-cell.filled { border: none; background: var(--white); }
-.cal-cell.today  { border: none; background: var(--ink); }
-.cal-day-row { display: flex; align-items: center; gap: 16px; width: 100%; height: 24px; }
-.cal-day { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: var(--g999); text-transform: uppercase; }
+.cal-cell.empty { background: transparent; border: 2px dashed var(--hint); }
+/* Today is filled in dark violet with a mustard day label — it's the
+   one cell you should be able to find without reading. */
+.cal-cell.today { background: var(--violet-dk); border: none; }
+.cal-day-row { display: flex; align-items: center; gap: 8px; }
+.cal-day { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: #999999; }
 .cal-cell.today .cal-day { color: var(--mustard); }
 .cal-pip { width: 10px; height: 10px; border-radius: 50%; background: var(--mustard); }
-.cal-label { font-size: 20px; font-weight: 900; letter-spacing: -0.6px; color: var(--ink); line-height: 1.2; text-transform: uppercase; }
+.cal-label {
+  font-size: 16px; font-weight: 900; color: var(--ink);
+  text-transform: uppercase; letter-spacing: -0.3px; overflow-wrap: anywhere;
+}
 .cal-label.small { font-size: 12px; }
 .cal-cell.today .cal-label { color: var(--white); }
 
-.start-cta {
-  position: absolute; bottom: 36px; left: 24px;
-  width: 345px; height: 64px; border: none; cursor: pointer; border-radius: 999px;
-  background: var(--ink); color: var(--white);
-  font-family: inherit; font-size: 16px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;
+/* ═══ CHOOSE A WORKOUT (violet = workouts) ═══════════════════════════ */
+.sel-screen { background: var(--cream); display: flex; flex-direction: column; }
+.sel-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 32px; }
+.sel-quick-row { display: flex; gap: 16px; padding: 20px; }
+.sel-quick {
+  flex: 1; min-height: 72px; padding: 16px; border-radius: 16px;
+  display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: left;
+}
+.sel-quick.rest { background: var(--white); border: none; }
+.sel-quick.create { background: transparent; border: 2px dashed var(--violet); }
+.sel-quick-name { flex: 1; font-size: 16px; font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
+.sel-label { padding: 12px 16px; }
+.sel-list { padding: 0 20px; display: flex; flex-direction: column; gap: 24px; }
+
+/* ═══ CREATE A WORKOUT (cream = planning) ════════════════════════════ */
+.cw-screen { background: var(--cream); display: flex; flex-direction: column; }
+.cw-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 130px; }
+.cw-section { padding: 10px 20px; display: flex; flex-direction: column; gap: 10px; }
+.cw-name-row { display: flex; align-items: center; gap: 8px; }
+.cw-name-input {
+  flex: 1; min-width: 0; border: none; background: transparent; outline: none;
+  font-size: 24px; font-weight: 900; color: #000000; letter-spacing: -0.5px;
+}
+.cw-name-input::placeholder { color: rgba(0,0,0,0.3); }
+.cw-summary { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--coral); }
+.cw-ex-list { display: flex; flex-direction: column; gap: 28px; }
+
+/* ─── exercise card (red 0-blur shadow = this is an EXERCISE) ─── */
+.ex-card {
+  background: var(--white); border-radius: 16px; padding: 16px 16px 20px;
+  box-shadow: 8px 8px 0 0 var(--coral-dk);
+  display: flex; flex-direction: column; gap: 12px;
+  margin-right: 8px;
+}
+.ex-card-top { display: flex; align-items: flex-start; gap: 12px; }
+.ex-num {
+  width: 28px; height: 28px; flex-shrink: 0; border-radius: 999px; background: var(--cream);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 900; color: var(--ink);
+}
+.ex-card-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ex-card-name {
+  font-size: 24px; font-weight: 900; color: #000000;
+  letter-spacing: -0.5px; overflow-wrap: anywhere;
+}
+.ex-card-detail {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--coral);
+}
+.ex-close { background: none; border: none; cursor: pointer; padding: 0; display: flex; flex-shrink: 0; }
+
+/* ─── stepper: target sets / goal reps ─── */
+.stepper-row { display: flex; align-items: center; gap: 12px; }
+.stepper-label {
+  flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: var(--muted);
+}
+.stepper { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.stepper-btn {
+  width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
+  background: var(--cream); display: flex; align-items: center; justify-content: center;
+}
+.stepper-value {
+  width: 60px; height: 48px; border-radius: 8px; background: var(--ink); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 900;
 }
 
-/* ═══ TODAY'S PLAN ═══════════════════════════════════════════════════ */
-.plan-screen { background: var(--violet); height: 852px; overflow: hidden; }
+.add-ex-row {
+  width: 100%; min-height: 48px; border-radius: 16px; border: none; cursor: pointer;
+  background: var(--cream-dk); color: var(--ink);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
+}
+.add-ex-plus { display: flex; }
+
+.cw-footer {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: var(--cream); padding: 16px 16px 32px;
+  display: flex; gap: 10px;
+}
+.cw-btn {
+  flex: 1; height: 64px; border-radius: 1000px; cursor: pointer;
+  font-size: 16px; font-weight: 900;
+}
+.cw-btn.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
+.cw-btn.solid { background: var(--ink); border: none; color: var(--white); }
+.cw-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ═══ CHOOSE AN EXERCISE (red = exercises) ═══════════════════════════ */
+.ce-screen { background: var(--white); display: flex; flex-direction: column; }
+/* The search strip continues the red header so the white pills read. */
+.ce-searchbar {
+  background: var(--coral); padding: 0 20px 16px;
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+.ce-search {
+  flex: 1; height: 48px; border-radius: 999px; background: var(--white);
+  display: flex; align-items: center; gap: 8px; padding: 0 16px; min-width: 0;
+}
+.ce-search input {
+  flex: 1; min-width: 0; border: none; background: transparent; outline: none;
+  font-size: 16px; font-weight: 500; color: var(--ink);
+}
+.ce-search input::placeholder { color: var(--muted); }
+.ce-add {
+  width: 48px; height: 48px; border-radius: 999px; border: none; cursor: pointer; padding: 0;
+  background: var(--white); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ce-scroll { flex: 1; min-height: 0; overflow-y: auto; background: var(--white); padding-bottom: 32px; }
+.ce-label-row { padding: 12px 20px 4px; }
+.ce-group-row {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px; background: var(--white); border: none; cursor: pointer; text-align: left;
+}
+.ce-group-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+/* Exercise rows carry no icon badge — just the name and its details. */
+.ce-row {
+  width: 100%; min-height: 64px; padding: 12px 20px 12px 32px;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--white); border: none; cursor: pointer; text-align: left;
+}
+.ce-row:active { background: rgba(0,0,0,0.04); }
+.ce-row-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ce-row-name { font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; }
+.ce-row-sub { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--coral); }
+.ce-empty { padding: 24px 20px; font-size: 14px; color: var(--muted); }
+
+/* ═══ CHOOSE A MUSCLE GROUP ══════════════════════════════════════════ */
+.cm-screen { background: var(--white); display: flex; flex-direction: column; }
+.cm-label { padding: 12px 20px 4px; }
+.cm-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 32px; display: flex; flex-direction: column; gap: 8px; }
+.cm-card {
+  display: flex; align-items: center; gap: 10px; min-height: 92px; padding: 16px;
+  border-radius: 16px; background: var(--white); border: none; cursor: pointer;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+}
+.cm-name { flex: 1; text-align: left; font-size: 16px; font-weight: 800; color: #000000; }
+
+/* ═══ CREATE AN EXERCISE (red) ═══════════════════════════════════════ */
+.cfg-screen { background: var(--coral); display: flex; flex-direction: column; }
+.cfg-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 130px; }
+.cfg-section { padding: 10px 20px; display: flex; flex-direction: column; gap: 10px; }
+.cfg-name-row { display: flex; align-items: center; gap: 8px; }
+.cfg-name {
+  flex: 1; min-width: 0; border: none; background: transparent; outline: none;
+  font-size: 24px; font-weight: 900; color: var(--white); letter-spacing: -0.5px;
+}
+.cfg-name::placeholder { color: rgba(255,255,255,0.5); }
+/* Auto-populated red-on-white detail line mirroring the exercise cards. */
+.cfg-detail {
+  align-self: flex-start; background: var(--white); color: var(--coral);
+  border-radius: 8px; padding: 4px 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+}
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  min-height: 40px; padding: 10px 16px; border-radius: 999px; cursor: pointer;
+  background: transparent; border: 2px solid rgba(255,255,255,0.5); color: var(--white);
+  font-size: 14px; font-weight: 700;
+}
+.chip.on { background: var(--white); color: var(--coral); border-color: var(--white); }
+.cfg-notes {
+  border: none; border-radius: 16px; padding: 14px; outline: none; resize: none;
+  background: rgba(255,255,255,0.15); color: var(--white);
+  font-size: 15px; font-weight: 500; line-height: 1.45;
+}
+.cfg-notes::placeholder { color: rgba(255,255,255,0.55); }
+.cfg-footer {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: var(--coral); padding: 16px 16px 32px; display: flex; gap: 10px;
+}
+.cfg-btn {
+  flex: 1; height: 64px; border-radius: 1000px; cursor: pointer;
+  font-size: 16px; font-weight: 900;
+}
+.cfg-btn.ghost { background: transparent; border: 2px solid var(--white); color: var(--white); }
+.cfg-btn.solid { background: var(--ink); border: none; color: var(--white); }
+.cfg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ═══ TODAY'S PLAN (violet = workouts) ═══════════════════════════════ */
+.plan-screen { background: var(--violet); }
 .plan-body-art {
   position: absolute; left: 178px; top: 16px; width: 215px; height: 821px;
   pointer-events: none; user-select: none;
@@ -139,16 +370,19 @@ html, body {
 .plan-content {
   position: relative; z-index: 1;
   padding: 38px 20px 24px; display: flex; flex-direction: column; gap: 16px;
-  /* Scroll the plan when it's taller than the space above the footer. */
   max-height: calc(852px - 118px); overflow-y: auto;
 }
+/* When the edit controls appear the list gets less room. */
+.plan-content.with-controls { max-height: calc(852px - 206px); }
 .plan-back {
   width: 48px; height: 48px; border-radius: 1000px; border: none; cursor: pointer; padding: 0;
-  background: var(--white); display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+  background: var(--white); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .plan-head { display: flex; flex-direction: column; gap: 4px; }
-.plan-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--white); opacity: 0.75; text-transform: uppercase; }
+.plan-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  color: var(--white); opacity: 0.75; text-transform: uppercase;
+}
 .plan-title { font-size: 64px; line-height: 58px; color: var(--white); }
 
 .plan-list { display: flex; flex-direction: column; gap: 8px; }
@@ -156,187 +390,89 @@ html, body {
 .plan-num {
   width: 28px; height: 28px; flex-shrink: 0; border-radius: 999px;
   background: rgba(17,17,17,0.08); color: var(--white);
-  font-size: 14px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
 }
-/* Coral fill + 2px white outline, no graphic. Grows to fit long names
-   but never exceeds the width left beside the numbered bullet. */
+.plan-num.sel { background: var(--violet-sel); }
+/* The exercise you're on right now, when the plan is opened mid-workout. */
+.plan-num.current { background: var(--mustard); color: var(--ink); }
+
 .plan-pill {
   display: inline-flex; align-items: center; min-height: 52px; padding: 12px 16px;
   border-radius: 16px; background: var(--coral); border: 2px solid var(--white);
-  max-width: calc(100% - 42px);
+  max-width: calc(100% - 42px); cursor: pointer; text-align: left;
 }
-/* Quick Add's "add another" row: a dashed ghost of the pill. */
+/* Tapped rows go white — that's the selection affordance. */
+.plan-pill.sel { background: var(--white); border-color: var(--white); }
+.plan-pill.sel .plan-pill-name { color: var(--ink); }
 .plan-pill.add {
   background: transparent; border: 2px dashed rgba(255,255,255,0.5);
-  cursor: pointer; font-family: inherit; gap: 8px; justify-content: space-between;
+  gap: 8px; justify-content: space-between;
 }
-.plan-pill-name { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; color: var(--white); overflow-wrap: anywhere; }
+.plan-pill-name {
+  font-size: 17px; font-weight: 900; letter-spacing: -0.3px;
+  color: var(--white); overflow-wrap: anywhere;
+}
 
 .plan-footer {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-  background: var(--violet);
-  padding: 10px 20px 32px; display: flex; flex-direction: column; gap: 10px;
+  background: var(--violet); padding: 0 20px 32px;
+  display: flex; flex-direction: column;
 }
-.plan-meta { font-size: 14px; font-weight: 500; color: var(--white); opacity: 0.8; }
+.plan-controls {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 0; margin-bottom: 4px;
+  border-top: 1px solid var(--violet-dk); border-bottom: 1px solid var(--violet-dk);
+}
+.plan-controls-label { flex: 1; font-size: 14px; font-weight: 700; color: var(--white); }
+.plan-controls-btns { display: flex; gap: 8px; }
+.plan-ctl {
+  width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
+  background: var(--violet-dk); display: flex; align-items: center; justify-content: center;
+}
+.plan-ctl:disabled { opacity: 0.35; cursor: not-allowed; }
 .plan-go {
   width: 100%; height: 64px; border: none; cursor: pointer; border-radius: 1000px;
-  background: var(--ink); color: var(--white);
-  font-family: inherit; font-size: 16px; font-weight: 900; letter-spacing: 0.5px;
-  text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: var(--ink); color: var(--white); margin-top: 12px;
+  font-size: 16px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
 }
 .plan-go:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* ═══ CHOOSE A WORKOUT — violet confined to top zone; flat cream list ═ */
-.sel-screen { background: var(--cream); display: flex; flex-direction: column; }
-.sel-top-zone { background: var(--violet); padding-bottom: 16px; display: flex; flex-direction: column; gap: 16px; }
-.sel-quick-row { display: flex; gap: 16px; padding: 0 20px; }
-.sel-quick {
-  flex: 1; height: 72px; border-radius: 16px; padding: 16px; background: transparent;
-  display: flex; align-items: center; gap: 10px; cursor: pointer;
-  font-family: inherit; text-align: left; min-width: 0;
-}
-.sel-quick.rest   { border: 2px solid var(--cream); }
-.sel-quick.create { border: 2px dashed rgba(255,255,255,0.3); }
-.sel-quick-name { flex: 1; font-size: 16px; font-weight: 800; color: var(--cream); min-width: 0; }
-.sel-quick.create .sel-quick-name { color: var(--white); }
-
-.sel-panel { flex: 1; background: var(--cream); border-top: 1px solid rgba(255,255,255,0.3); padding-bottom: 16px; }
-.sel-panel-label { padding: 12px 16px; }
-.sel-cell {
-  width: 100%; min-height: 68px; padding: 16px; background: transparent; border: none;
-  display: flex; align-items: center; gap: 10px; cursor: pointer;
-  font-family: inherit; text-align: left;
-}
-.sel-cell:active { background: rgba(0,0,0,0.04); }
-.sel-cell-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-
-/* ═══ CREATE A WORKOUT ═══════════════════════════════════════════════ */
-.cw-screen { background: var(--cream); height: 852px; overflow: hidden; position: relative; }
-.cw-scroll { height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; padding-bottom: 120px; }
-.cw-section { padding: 10px 20px; display: flex; flex-direction: column; gap: 10px; }
-.cw-name-row { display: flex; align-items: center; gap: 8px; }
-.cw-name-input {
-  border: none; background: transparent; font-family: inherit;
-  font-size: 24px; font-weight: 900; letter-spacing: -0.8px; color: #000000;
-  outline: none; caret-color: var(--ink); min-width: 0; flex: 1;
-}
-.cw-name-input::placeholder { color: rgba(0,0,0,0.3); }
-
-.cw-ex-list { display: flex; flex-direction: column; gap: 12px; }
-.cw-ex-card {
-  display: flex; align-items: center; gap: 10px; min-height: 72px; padding: 16px;
-  border-radius: 16px; background: var(--white);
-}
-.cw-ex-name { flex: 1; font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; min-width: 0; }
-
-.dashed-row {
-  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 72px; padding: 16px;
-  border-radius: 16px; border: 2px dashed var(--hint); background: transparent;
-  cursor: pointer; font-family: inherit; text-align: left;
-}
-.dashed-row-name { flex: 1; font-size: 16px; font-weight: 800; color: var(--hint); overflow-wrap: anywhere; min-width: 0; }
-
-.cw-footer {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  background: var(--cream); padding: 12px 20px 32px;
-}
-.cw-save {
-  width: 100%; height: 64px; border: none; cursor: pointer; border-radius: 999px;
-  background: var(--ink); color: var(--white);
-  font-family: inherit; font-size: 16px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;
-}
-
-/* ═══ CHOOSE AN EXERCISE ═════════════════════════════════════════════ */
-.ce-screen { display: flex; flex-direction: column; background: var(--white); }
-.ce-header { background: var(--violet); padding-bottom: 16px; }
-.ce-panel { background: var(--white); flex: 1; }
-.ce-add-wrap { background: var(--white); padding: 12px 16px; }
-.ce-label-row { background: var(--white); padding: 8px 20px; }
-.ce-group-row {
-  width: 100%; display: flex; align-items: center; gap: 10px;
-  padding: 8px 16px; background: var(--white); border: none; cursor: pointer;
-  font-family: inherit; text-align: left;
-}
-.ce-group-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.ce-row {
-  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 72px; padding: 16px;
-  background: var(--cream); border: none; cursor: pointer; font-family: inherit; text-align: left;
-}
-.ce-badge {
-  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; background: var(--badge-bg);
-  display: flex; align-items: center; justify-content: center;
-}
-.ce-row-name { flex: 1; font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; min-width: 0; }
-
-/* ═══ CHOOSE A MUSCLE GROUP ══════════════════════════════════════════ */
-.cm-screen { background: var(--cream); display: flex; flex-direction: column; gap: 16px; }
-.cm-label { padding: 0 20px; }
-.cm-list { display: flex; flex-direction: column; gap: 16px; padding: 0 20px 40px; }
-.cm-card {
-  display: flex; align-items: center; gap: 10px; height: 92px; padding: 16px;
-  border-radius: 16px; background: var(--white); border: none; cursor: pointer; font-family: inherit;
-}
-.cm-name { flex: 1; text-align: left; font-size: 16px; font-weight: 800; color: #000000; }
-
-/* ═══ CREATE AN EXERCISE — name + notes only ═════════════════════════ */
-.cfg-screen { background: var(--coral); display: flex; flex-direction: column; gap: 16px; }
-.cfg-section { padding: 10px 20px; display: flex; flex-direction: column; gap: 10px; }
-.cfg-name-row { display: flex; align-items: center; gap: 8px; }
-.cfg-name {
-  border: none; background: transparent; font-family: inherit;
-  font-size: 24px; font-weight: 900; letter-spacing: -0.8px; color: var(--white);
-  outline: none; caret-color: var(--white); flex: 1; min-width: 0;
-}
-.cfg-name::placeholder { color: rgba(255,255,255,0.3); }
-.cfg-notes {
-  border: none; background: transparent; font-family: inherit; resize: none;
-  font-size: 16px; font-weight: 400; line-height: 1.4; color: var(--white);
-  outline: none; caret-color: var(--white); width: 100%;
-}
-.cfg-notes::placeholder { color: rgba(255,255,255,0.3); }
-
-.cfg-footer {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  padding: 10px 20px 32px; display: flex; gap: 10px;
-}
-.cfg-close, .cfg-save {
-  flex: 1; height: 64px; border-radius: 1000px; cursor: pointer;
-  font-family: inherit; font-size: 16px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;
-}
-.cfg-close { background: transparent; border: 2px solid var(--white); color: var(--white); }
-.cfg-save  { background: var(--white); border: none; color: var(--ink); }
-.cfg-save:disabled { opacity: 0.3; cursor: not-allowed; }
-
-/* ═══ LOGGING SCREEN ═════════════════════════════════════════════════
-   Progress bar stays fixed at the top; only the darker working area
-   scrolls, and only when its content is taller than the space it has. */
-.log-screen { display: flex; flex-direction: column; background: var(--coral-dk); height: 852px; overflow: hidden; }
+/* ═══ LOGGING SCREEN (red = exercises) ═══════════════════════════════
+   Progress tracker fixed at the top; only the dark area scrolls. */
+.log-screen { display: flex; flex-direction: column; background: var(--coral-dk); }
 
 .log-progress {
   flex-shrink: 0; background: var(--coral);
   padding: 32px 20px 20px; display: flex; flex-direction: column; gap: 12px;
 }
+.log-title-block { display: flex; flex-direction: column; gap: 2px; }
 .log-exercise-name { font-size: 40px; line-height: 42px; color: var(--white); overflow-wrap: anywhere; }
+.log-detail-line {
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  color: rgba(255,255,255,0.75);
+}
 
 .log-tools { display: flex; gap: 12px; }
-.lat-btn {
-  height: 48px; padding: 12px; border: none; cursor: pointer; border-radius: 8px;
-  background: var(--coral-dk); color: var(--white);
-  display: inline-flex; align-items: center; gap: 10px;
-  font-family: inherit; font-size: 14px; font-weight: 800; line-height: 15px; text-transform: uppercase;
-}
-.log-sq {
+.log-btn {
   width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
-  background: var(--coral-dk); display: flex; align-items: center; justify-content: center;
+  background: var(--coral-dk); color: var(--white);
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-shrink: 0;
+}
+.log-btn.wide {
+  flex: 1; padding: 0 12px;
+  font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px;
 }
 
 .log-pips { display: flex; gap: 8px; height: 6px; }
 .log-pip { height: 6px; flex: 1; border-radius: 999px; }
 .log-pip.done    { background: var(--white); }
+.log-pip.current { background: var(--ink); }
 .log-pip.pending { background: rgba(0,0,0,0.3); }
 
 .log-nav { display: flex; align-items: center; justify-content: space-between; }
-.log-exercise-count { font-size: 13px; font-weight: 500; color: var(--white); opacity: 0.8; }
+.log-exercise-count { font-size: 13px; font-weight: 500; color: var(--white); opacity: 0.85; }
 .log-nav-btns { display: flex; gap: 12px; }
 .log-round {
   width: 48px; height: 48px; border-radius: 999px; border: none; cursor: pointer; padding: 0;
@@ -344,34 +480,27 @@ html, body {
 }
 .log-round:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* The dark area: takes the rest of the height, scrolls internally when
-   its content overflows. The deep red fills all the way down; the
-   bodymap is pinned to the very bottom so its legs reach the edge. */
 .log-body {
   flex: 1; min-height: 0; overflow-y: auto;
-  background: var(--coral-dk);
-  padding: 24px 20px 0;
+  background: var(--coral-dk); padding: 24px 20px 0;
   display: flex; flex-direction: column; gap: 12px;
 }
 .log-buttons { display: flex; gap: 12px; flex-shrink: 0; }
 .ss-btn {
-  flex: 1; height: 48px; border-radius: 1000px; font-family: inherit;
-  font-size: 14px; font-weight: 700; line-height: 15px; cursor: pointer;
+  flex: 1; height: 48px; border-radius: 1000px; cursor: pointer;
+  font-size: 14px; font-weight: 700;
 }
 .ss-btn.outline { background: transparent; border: 2px solid var(--white); color: var(--white); }
 .ss-btn.solid   { background: var(--ink); color: var(--white); border: none; }
+/* Pushed to the bottom so the legs reach the screen edge. */
+.log-bodymap { display: block; width: 393px; height: auto; margin: auto -20px 0; pointer-events: none; }
 
-/* Fills the leftover space and holds the bodymap flush to the bottom.
-   margin auto pushes it down; negative side margins let it bleed to
-   the screen edges past the body's padding. */
-.log-bodymap {
-  display: block; width: 393px; height: auto;
-  margin: auto -20px 0; pointer-events: none;
-}
-
+/* ─── logged set cells ─── */
 .set-group { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; flex-shrink: 0; }
-.set-cell { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px; background: rgba(255,255,255,0.6); }
-/* Tappable logged sets get a pressed affordance. */
+.set-cell {
+  display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px;
+  background: rgba(255,255,255,0.6);
+}
 .set-cell.tappable { cursor: pointer; }
 .set-cell.tappable:active { background: rgba(255,255,255,0.78); }
 .sc-badge {
@@ -388,107 +517,147 @@ html, body {
   border-radius: 4px; background: var(--white);
   font-size: 12px; font-weight: 700; white-space: nowrap;
 }
-/* Failure is a win — it gets the brand violet, filled, as a badge. */
+/* Failure is a win — brand violet, filled. */
 .sc-rpe.failure {
   background: var(--violet); color: var(--white);
   min-width: 28px; justify-content: center; padding: 4px 8px;
 }
-/* A logged set with no RPE yet — a dashed, violet-tinted nudge to tap
-   in and add the rating the user skipped. */
 .sc-rpe.add-rpe {
   background: transparent; color: var(--violet);
   border: 1px dashed var(--violet); font-weight: 800;
 }
 
-.next-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 20px 32px; z-index: 2; }
+.next-bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 12px 20px 32px; }
 .next-btn {
-  width: 100%; height: 64px; background: var(--ink); color: var(--white); border: none; cursor: pointer;
-  border-radius: 1000px; font-family: inherit; font-size: 16px; font-weight: 900;
-  letter-spacing: 0.5px; text-transform: uppercase;
+  width: 100%; height: 64px; border: none; cursor: pointer; border-radius: 1000px;
+  background: var(--ink); color: var(--white);
+  font-size: 16px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;
   display: flex; align-items: center; justify-content: center; gap: 10px;
 }
 
-/* ─── bottom sheets ─── */
-.sheet-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.32); z-index: 100; display: flex; align-items: flex-end; }
+/* ═══ SHEETS ═════════════════════════════════════════════════════════ */
+.sheet-overlay {
+  position: absolute; inset: 0; z-index: 10; background: rgba(0,0,0,0.32);
+  display: flex; align-items: flex-end;
+}
 .log-sheet {
-  width: 100%; background: var(--cream); border-radius: 24px 24px 0 0;
-  padding: 16px 10px 22px; display: flex; flex-direction: column; gap: 10px;
-  animation: sheetUp .22s ease;
+  width: 100%; max-height: 88%; overflow-y: auto;
+  background: var(--cream); border-radius: 24px 24px 0 0;
+  padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 12px;
 }
-@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto; }
+.sheet-handle {
+  width: 40px; height: 4px; border-radius: 2px; background: #DDD6C8;
+  align-self: center; flex-shrink: 0;
+}
+.sheet-title { font-size: 48px; line-height: 46px; }
+.sheet-title.red { color: var(--coral-dk); }
+.sheet-title.violet { color: var(--violet-dk); }
+.sheet-footer { padding-top: 4px; }
+.sheet-close {
+  width: 100%; height: 48px; border-radius: 1000px; cursor: pointer;
+  background: transparent; border: 2px solid var(--ink); color: var(--ink);
+  font-size: 14px; font-weight: 700;
+}
+.sheet-empty { font-size: 14px; color: var(--muted); padding: 8px 4px; }
 
-.pause-sheet { padding: 16px 16px 22px; }
-.pause-title { font-size: 54px; line-height: 48px; color: var(--coral-dk); margin-top: 10px; }
-.pause-copy { font-size: 16px; font-weight: 400; line-height: 1.2; color: var(--ink); }
-.pause-actions { display: flex; gap: 12px; padding-top: 12px; }
-.pause-btn {
-  flex: 1; height: 48px; border-radius: 1000px; cursor: pointer;
-  font-family: inherit; font-size: 14px; font-weight: 700; line-height: 15px;
+.opt-group { display: flex; flex-direction: column; }
+.opt-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--ink); padding: 12px 4px 4px;
 }
-.pause-btn.ghost   { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
-.pause-btn.confirm { background: var(--ink); border: none; color: var(--white); }
+.opt-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  min-height: 64px; padding: 12px 4px; background: transparent; border: none;
+  cursor: pointer; text-align: left;
+}
+.opt-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.opt-title { font-size: 16px; font-weight: 800; color: #000000; }
+.opt-blurb {
+  font-family: 'Gabarito', 'Inter', sans-serif;
+  font-size: 14px; font-weight: 400; color: var(--muted); line-height: 1.35;
+}
+.opt-check {
+  width: 24px; height: 24px; border-radius: 8px; flex-shrink: 0;
+  background: var(--white); border: 1px solid var(--badge-bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.opt-check.on { background: var(--coral); border-color: var(--coral); }
 
-.last-time-row { display: flex; align-items: center; gap: 12px; height: 52px; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 16px; }
-.lt-badge {
-  display: inline-flex; align-items: center; height: 36px; padding: 10px 8px;
-  border-radius: 10px; background: var(--blue); color: var(--white);
-  font-size: 16px; font-weight: 900; white-space: nowrap;
+.swap-head { display: flex; align-items: center; gap: 12px; padding: 8px 4px; }
+.swap-head-text { display: flex; flex-direction: column; min-width: 0; }
+.swap-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  min-height: 60px; padding: 12px 4px; background: transparent; border: none;
+  cursor: pointer; text-align: left;
 }
+.swap-row:active { background: rgba(0,0,0,0.04); }
+.swap-row.add { border-top: 1px solid rgba(0,0,0,0.08); margin-top: 4px; }
+.swap-row-name { flex: 1; font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; }
+
+.last-time-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  border-radius: 12px; background: rgba(0,0,0,0.05); flex-shrink: 0;
+}
+.lt-badge { font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap; }
 .lt-data { flex: 1; display: flex; align-items: center; gap: 4px; }
 
-/* ─── set widget ─── */
-.set-widget { background: var(--white); border-radius: 16px; padding: 12px 16px 22px; display: flex; flex-direction: column; gap: 12px; }
-.sw-label { font-size: 13px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--g999); }
-.sw-group { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-.sw-field-label { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--gbbb); }
-.sw-controls { display: flex; align-items: center; gap: 4px; }
-.sw-controls.reps { gap: 20px; }
-.nc-btn {
-  width: 48px; height: 48px; border: none; cursor: pointer; background: var(--cream);
-  border-radius: 14px; font-family: inherit; font-size: 13px; font-weight: 700; color: var(--step);
-}
-.nc-btn.wide { font-size: 15px; }
-.nc-btn:hover { background: #EAE3D5; }
-.nc-value {
-  height: 64px; width: 100px; border-radius: 16px; background: var(--ink);
-  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
-}
-.nc-value.reps { border-radius: 14px; }
-.nc-value input {
-  width: 52px; border: none; background: transparent; color: var(--white); font-family: inherit;
-  font-size: 24px; font-weight: 900; text-align: center; font-variant-numeric: tabular-nums; outline: none;
-}
-.nc-unit { font-size: 11px; font-weight: 500; color: #888888; }
+.pause-copy { font-size: 15px; line-height: 1.45; color: var(--ink); padding: 0 4px; }
+.pause-actions { display: flex; gap: 10px; padding-top: 8px; }
+.pause-btn { flex: 1; height: 56px; border-radius: 1000px; cursor: pointer; font-size: 15px; font-weight: 800; }
+.pause-btn.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
+.pause-btn.confirm { background: var(--ink); border: none; color: var(--white); }
 
-/* ─── feel slider — 341x64, ten stops, continuous ───
-   The rating rides ON the white knob (RPE N / FAILURE!). The prompt
-   only shows on the untouched track. The final stop is brand violet;
-   at failure the knob gets a thick violet ring to celebrate it. */
-.sw-feel { padding-top: 20px; }
+/* ═══ SET WIDGET ═════════════════════════════════════════════════════ */
+.set-widget {
+  background: var(--white); border-radius: 20px; padding: 20px 16px 16px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.sw-label { font-size: 14px; font-weight: 800; letter-spacing: 1px; color: var(--muted); }
+.sw-group { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.sw-field-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #9A9A9A; }
+.sw-controls { display: flex; align-items: center; gap: 8px; justify-content: center; }
+.nc-btn {
+  min-width: 52px; height: 68px; border-radius: 14px; border: none; cursor: pointer;
+  background: var(--cream); color: var(--ink); font-size: 18px; font-weight: 800;
+}
+.nc-btn.wide { min-width: 58px; }
+.nc-value {
+  display: flex; align-items: baseline; justify-content: center; gap: 4px;
+  min-width: 128px; height: 88px; border-radius: 16px; background: var(--ink); padding: 0 12px;
+}
+.nc-value.reps { min-width: 110px; }
+.nc-value input {
+  width: 100%; min-width: 0; border: none; background: transparent; outline: none;
+  color: var(--white); font-size: 40px; font-weight: 900; text-align: center;
+  -moz-appearance: textfield;
+}
+.nc-value input::-webkit-outer-spin-button,
+.nc-value input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.nc-unit { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.7); }
+
+/* ─── feel slider: purple ramp, failure circle at the end ─── */
+.sw-feel { padding-top: 4px; }
 .feel-track {
   position: relative; display: flex; height: 64px; border-radius: 999px;
   cursor: pointer; touch-action: none; user-select: none;
 }
 .feel-seg { flex: 1; height: 100%; }
 .feel-seg:first-child { border-radius: 999px 0 0 999px; }
-/* The violet failure stop is rounded on all corners — a distinct pill
-   that pops off the end of the ramp rather than blending into it. */
+/* The violet failure stop is a full circle popping off the end. */
 .feel-seg:last-child  { border-radius: 999px; }
 .feel-prompt {
   position: absolute; inset: 0; z-index: 2;
   display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
-  text-transform: uppercase; color: #000000; pointer-events: none;
+  text-transform: uppercase; color: var(--ink); pointer-events: none;
 }
 .feel-knob {
   position: absolute; top: 3px; z-index: 3;
   width: 58px; height: 58px; margin-left: 3px; border-radius: 999px;
-  background: var(--white); pointer-events: none;
+  background: var(--white); pointer-events: none; box-sizing: border-box;
   box-shadow: 0 1px 4px rgba(0,0,0,0.18);
   display: flex; align-items: center; justify-content: center;
   transition: left .06s linear;
-  box-sizing: border-box;
 }
 .feel-track.dragging .feel-knob { transition: none; }
 .feel-knob.failure { border: 7px solid var(--violet); }
@@ -500,60 +669,56 @@ html, body {
 
 .sw-footer { display: flex; justify-content: flex-end; }
 .done-btn {
-  width: 100px; height: 39px; background: var(--ink); color: var(--white); border: none; cursor: pointer;
-  border-radius: 1000px; font-family: inherit; font-size: 14px; font-weight: 800; line-height: 15px;
+  min-width: 128px; height: 56px; padding: 0 28px; border-radius: 1000px;
+  border: none; cursor: pointer; background: var(--ink); color: var(--white);
+  font-size: 16px; font-weight: 800;
 }
-.done-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.done-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ═══ EXERCISE HISTORY ═══════════════════════════════════════════════ */
-.hist-screen { background: var(--cream); display: flex; flex-direction: column; gap: 16px; }
-.hist-head { padding: 0 20px; display: flex; flex-direction: column; gap: 4px; }
-.hist-title { font-size: 54px; line-height: 48px; color: var(--ink); }
-.hist-divider { height: 2px; background: rgba(255,255,255,0.3); }
-.hist-scroll { flex: 1; overflow-y: auto; padding-bottom: 32px; }
-.hist-date { padding: 10px 20px; }
-.hist-sets { padding: 10px 20px; }
-.hist-empty { padding: 24px 20px; font-size: 15px; font-weight: 500; color: var(--muted); }
+.hist-screen { background: var(--coral-dk); display: flex; flex-direction: column; }
+.hist-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 20px 32px; }
+.hist-date { padding: 16px 0 8px; }
+.hist-date .row-label { color: rgba(255,255,255,0.8); }
+.hist-sets { margin-bottom: 8px; }
+.hist-empty { color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.5; padding: 24px 0; }
 
 /* ═══ WORKOUT COMPLETE (mustard) ═════════════════════════════════════ */
-.done-screen { background: var(--mustard); display: flex; flex-direction: column; height: 852px; overflow: hidden; }
+.done-screen { background: var(--mustard); display: flex; flex-direction: column; }
 .done-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 112px; }
-
 .done-head { padding: 72px 20px 12px; display: flex; flex-direction: column; gap: 12px; }
 .done-head-text { display: flex; flex-direction: column; gap: 2px; }
 .done-title { font-size: 60px; line-height: 54px; color: var(--ink); }
 .done-meta { font-size: 15px; font-weight: 700; color: var(--ink); }
-
 .done-actions { display: flex; gap: 12px; }
 .done-add {
   height: 48px; padding: 12px; border: none; cursor: pointer; border-radius: 8px;
   background: var(--mustard-dk); color: var(--ink);
   display: inline-flex; align-items: center; gap: 10px;
-  font-family: inherit; font-size: 14px; font-weight: 800; text-transform: uppercase;
+  font-size: 14px; font-weight: 800; text-transform: uppercase;
 }
 .done-share {
   width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
   background: var(--mustard-dk); display: flex; align-items: center; justify-content: center;
 }
-
 .done-list { padding: 12px 20px; display: flex; flex-direction: column; gap: 12px; }
 .done-ex { display: flex; flex-direction: column; }
 .done-ex-head {
   background: rgba(255,255,255,0.6); border-radius: 16px 16px 0 0;
   padding: 16px 8px; display: flex; flex-direction: column; gap: 4px;
 }
-.done-ex-name { font-size: 24px; font-weight: 800; color: var(--ink); letter-spacing: -0.5px; overflow-wrap: anywhere; }
+.done-ex-name {
+  font-size: 24px; font-weight: 800; color: var(--ink);
+  letter-spacing: -0.5px; overflow-wrap: anywhere;
+}
 .done-ex-sub { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--ink); opacity: 0.7; }
-/* The set group inside a done-ex loses its top rounding so it butts
-   cleanly under the exercise header. */
 .done-ex .set-group { border-radius: 0 0 16px 16px; }
-
 .done-footer {
   position: absolute; left: 0; right: 0; bottom: 0;
   background: var(--cream); padding: 16px 20px 32px;
 }
 .done-cta {
-  width: 100%; height: 64px;
-  background: var(--ink); color: var(--white); border: none; cursor: pointer; border-radius: 999px;
-  font-family: inherit; font-size: 16px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;
+  width: 100%; height: 64px; border: none; cursor: pointer; border-radius: 999px;
+  background: var(--ink); color: var(--white);
+  font-size: 16px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;
 }
