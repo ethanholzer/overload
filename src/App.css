@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════
    OVERLOAD
-   Colour semantics: cream = planning, violet = workouts, red = exercises
+   cream = planning · violet = workouts & plans · red = exercises
    ═══════════════════════════════════════════════════════════════════ */
 
 :root {
@@ -8,17 +8,18 @@
   --cream-dk:   #ECE6DA;
   --violet:     #6C5CE7;
   --violet-dk:  #5346C4;
-  --violet-sel: #6556D6;
+  --violet-lt:  #AAA2E7;
   --coral:      #F0573F;
   --coral-dk:   #D2452F;
   --mustard:    #F5B82E;
   --mustard-dk: #E0A416;
+  --green:      #3DBB6E;
   --ink:        #111111;
   --white:      #FFFFFF;
-  --hint:       #BDBDBD;
   --muted:      #737373;
-  --warmup:     #C2C2C2;
-  --badge-bg:   #DBDBDB;
+  --sub:        #828282;
+  --step-txt:   #666666;
+  --field-lbl:  #BBBBBB;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,36 +30,27 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* League Gothic is the display face for every big title. */
 .display {
   font-family: 'League Gothic', 'Inter', sans-serif;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0;
+  font-weight: 400; text-transform: uppercase;
 }
 
 button { font-family: inherit; }
 input, textarea { font-family: inherit; }
 
-/* Every screen is a 393x852 phone frame. */
 .start-screen, .plan-screen, .sel-screen, .cw-screen, .ce-screen,
-.cm-screen, .cfg-screen, .log-screen, .done-screen, .hist-screen {
-  position: relative;
-  width: 393px;
-  height: 852px;
-  margin: 0 auto;
-  overflow: hidden;
+.cfg-screen, .log-screen, .done-screen, .hist-screen, .cp-screen, .cs-screen {
+  position: relative; width: 393px; height: 852px; margin: 0 auto; overflow: hidden;
 }
 
 /* ═══ SHARED ═════════════════════════════════════════════════════════ */
-.hdr { display: flex; align-items: center; gap: 12px; padding: 64px 20px 16px; flex-shrink: 0; }
+.hdr { display: flex; align-items: center; gap: 12px; padding: 62px 16px 16px; flex-shrink: 0; }
 .hdr-back {
   width: 48px; height: 48px; border-radius: 1000px; border: none; cursor: pointer; padding: 0;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.hdr-title { font-size: 54px; line-height: 48px; overflow-wrap: anywhere; }
+.hdr-title { font-size: 48px; line-height: 46px; overflow-wrap: anywhere; }
 
-/* Tone = which part of the app you're in. */
 .hdr-violet { background: var(--violet); }
 .hdr-violet .hdr-back { background: var(--white); }
 .hdr-violet .hdr-back svg path { fill: var(--violet); }
@@ -73,41 +65,34 @@ input, textarea { font-family: inherit; }
 .hdr-red .hdr-back svg path { fill: var(--coral); }
 .hdr-red .hdr-title { color: var(--white); }
 
-.hdr-plain { background: transparent; }
-.hdr-plain .hdr-back { background: rgba(255,255,255,0.2); }
-.hdr-plain .hdr-title { color: var(--white); }
+.hdr-white { background: var(--white); }
+.hdr-white .hdr-back { background: var(--violet); }
+.hdr-white .hdr-title { color: var(--violet); }
 
 .row-label {
-  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
   text-transform: uppercase; color: #555451;
 }
+.row-label.dark { color: #000000; }
 .row-label.on-red { color: rgba(255,255,255,0.75); }
 .section-label {
-  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
   text-transform: uppercase; color: #666666;
 }
 .list-name { font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; }
 .list-sub { font-size: 14px; font-weight: 400; color: var(--muted); }
-.icon-btn { background: none; border: none; cursor: pointer; padding: 0; display: flex; flex-shrink: 0; }
 .muscle-icon { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 
-/* ═══ START PAGE (cream = planning) ══════════════════════════════════ */
-.start-screen { background: var(--cream); overflow-y: auto; padding-bottom: 32px; }
-.start-toolbar { display: flex; justify-content: flex-end; padding: 32px 20px 0; }
-.history-btn {
-  height: 40px; padding: 0 16px; border: none; cursor: pointer; border-radius: 1000px;
-  background: var(--mustard); color: var(--ink);
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+/* ═══ START PAGE ═════════════════════════════════════════════════════ */
+.start-screen { background: var(--cream); display: flex; flex-direction: column; }
+.start-top { flex: 1; min-height: 0; overflow-y: auto; padding: 62px 20px 20px; }
+.start-toolbar { display: flex; justify-content: flex-end; gap: 12px; }
+.tool-btn {
+  width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
+  background: var(--white); display: flex; align-items: center; justify-content: center;
 }
 
-.start-head { padding: 32px 20px 0; }
-.start-eyebrow {
-  font-size: 11px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: #666666;
-}
-/* Wordmark: a white ghost offset behind the violet face. */
-.overload-stack { position: relative; height: 100px; margin-top: 4px; }
+.overload-stack { position: relative; height: 105px; margin-top: 32px; }
 .ol-back, .ol-front {
   position: absolute; left: 0; top: 0;
   font-family: 'League Gothic', sans-serif; font-size: 112px; line-height: 100px;
@@ -116,14 +101,13 @@ input, textarea { font-family: inherit; }
 .ol-back { color: var(--white); }
 .ol-front { color: var(--violet); top: 5px; }
 
-.start-section { padding: 32px 20px 0; display: flex; flex-direction: column; gap: 12px; }
+.start-section { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; }
 
-/* ─── workout card (violet 0-blur shadow = this is a WORKOUT) ─── */
+/* Workout card — violet 0-blur shadow marks it as a WORKOUT. */
 .wk-card {
-  background: var(--white); border-radius: 16px; padding: 16px;
+  background: var(--white); border-radius: 16px; padding: 16px 16px 20px;
   box-shadow: 8px 8px 0 0 var(--violet);
-  display: flex; flex-direction: column; gap: 12px;
-  margin-right: 8px;   /* leave room for the offset shadow */
+  display: flex; flex-direction: column; gap: 24px; margin-right: 8px;
 }
 .wk-card-top { display: flex; align-items: flex-start; gap: 12px; }
 .wk-card-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -134,17 +118,15 @@ input, textarea { font-family: inherit; }
 .wk-badge {
   align-self: flex-start; background: var(--coral); color: var(--white);
   border-radius: 8px; padding: 4px 8px;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.5px; white-space: nowrap;
+  font-size: 11px; font-weight: 700; white-space: nowrap;
 }
 .wk-kebab { background: none; border: none; cursor: pointer; padding: 0; display: flex; flex-shrink: 0; }
 .wk-cta {
   height: 39px; border: none; cursor: pointer; border-radius: 1000px;
-  background: var(--ink); color: var(--white);
-  font-size: 14px; font-weight: 800; letter-spacing: 0.3px;
+  background: var(--ink); color: var(--white); font-size: 14px; font-weight: 800;
 }
-.wk-cta.small { align-self: flex-end; padding: 0 20px; }
+.wk-cta.small { align-self: flex-end; padding: 0 24px; letter-spacing: 0.5px; }
 
-/* Calendar chip on today's card. */
 .cal-chip {
   width: 44px; height: 46px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
   border: 1px solid var(--violet); background: var(--white);
@@ -152,37 +134,45 @@ input, textarea { font-family: inherit; }
 }
 .cal-chip-month {
   width: 100%; height: 16px; background: var(--violet); color: var(--white);
-  font-size: 8px; font-weight: 900; letter-spacing: 0.5px;
-  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 900; display: flex; align-items: center; justify-content: center;
 }
 .cal-chip-day {
   flex: 1; display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 900; color: var(--ink);
 }
 
-/* ─── weekly calendar ─── */
-.cal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cal-cell {
-  min-height: 108px; border-radius: 28px; padding: 12px 16px;
-  display: flex; flex-direction: column; justify-content: space-between;
-  cursor: pointer; text-align: left; border: none; background: var(--white);
+/* Bottom sheet: active plan, or the two zero-state entry points. */
+.start-bottom {
+  flex-shrink: 0; background: var(--white);
+  border-radius: 24px 24px 0 0; padding: 16px 16px 40px;
 }
-.cal-cell.empty { background: transparent; border: 2px dashed var(--hint); }
-/* Today is filled in dark violet with a mustard day label — it's the
-   one cell you should be able to find without reading. */
-.cal-cell.today { background: var(--violet-dk); border: none; }
-.cal-day-row { display: flex; align-items: center; gap: 8px; }
-.cal-day { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: #999999; }
-.cal-cell.today .cal-day { color: var(--mustard); }
-.cal-pip { width: 10px; height: 10px; border-radius: 50%; background: var(--mustard); }
-.cal-label {
-  font-size: 16px; font-weight: 900; color: var(--ink);
-  text-transform: uppercase; letter-spacing: -0.3px; overflow-wrap: anywhere;
+.start-cta-stack { display: flex; flex-direction: column; gap: 12px; padding: 8px 0; }
+.start-cta {
+  width: 100%; height: 64px; border-radius: 1000px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 16px; font-weight: 900;
 }
-.cal-label.small { font-size: 12px; }
-.cal-cell.today .cal-label { color: var(--white); }
+.start-cta.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
+.start-cta.solid { background: var(--ink); border: none; color: var(--white); text-transform: uppercase; }
 
-/* ═══ CHOOSE A WORKOUT (violet = workouts) ═══════════════════════════ */
+.plan-card { display: flex; flex-direction: column; gap: 8px; }
+.plan-card-head { display: flex; align-items: center; }
+.active-badge {
+  background: var(--green); color: var(--white); border-radius: 8px; padding: 4px 8px;
+  font-size: 11px; font-weight: 700; margin-right: auto;
+}
+.plan-card-name { font-size: 24px; font-weight: 900; color: #000000; letter-spacing: -0.5px; }
+.plan-days { display: flex; gap: 4px; margin-top: 4px; }
+.plan-day {
+  flex: 1; height: 64px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: var(--white);
+}
+.plan-day.on   { background: var(--violet); }
+.plan-day.rest { background: var(--violet-lt); }
+.plan-day.today { outline: 2px solid var(--ink); outline-offset: -2px; }
+
+/* ═══ SELECT A WORKOUT ═══════════════════════════════════════════════ */
 .sel-screen { background: var(--cream); display: flex; flex-direction: column; }
 .sel-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 32px; }
 .sel-quick-row { display: flex; gap: 16px; padding: 20px; }
@@ -192,29 +182,98 @@ input, textarea { font-family: inherit; }
 }
 .sel-quick.rest { background: var(--white); border: none; }
 .sel-quick.create { background: transparent; border: 2px dashed var(--violet); }
-.sel-quick-name { flex: 1; font-size: 16px; font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
+.sel-quick-name { flex: 1; font-size: 16px; font-weight: 800; color: var(--ink); }
 .sel-label { padding: 12px 16px; }
 .sel-list { padding: 0 20px; display: flex; flex-direction: column; gap: 24px; }
+.sel-empty { padding: 24px 20px; font-size: 15px; color: var(--muted); }
 
-/* ═══ CREATE A WORKOUT (cream = planning) ════════════════════════════ */
-.cw-screen { background: var(--cream); display: flex; flex-direction: column; }
-.cw-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 130px; }
-.cw-section { padding: 10px 20px; display: flex; flex-direction: column; gap: 10px; }
-.cw-name-row { display: flex; align-items: center; gap: 8px; }
-.cw-name-input {
+/* ═══ CREATE A PLAN ══════════════════════════════════════════════════ */
+.cp-screen { background: var(--white); display: flex; flex-direction: column; }
+.cp-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 130px; }
+.cp-intro { padding: 10px 20px; display: flex; flex-direction: column; gap: 10px; }
+.cp-blurb {
+  font-family: 'Gabarito', 'Inter', sans-serif;
+  font-size: 14px; color: var(--muted); line-height: 1.25;
+}
+.cp-name-block { padding: 14px 20px 10px; display: flex; flex-direction: column; gap: 4px; }
+.cp-name-row { display: flex; align-items: center; gap: 8px; }
+.cp-name-input {
   flex: 1; min-width: 0; border: none; background: transparent; outline: none;
   font-size: 24px; font-weight: 900; color: #000000; letter-spacing: -0.5px;
 }
+.cp-name-input::placeholder { color: rgba(0,0,0,0.3); }
+.cp-split-line { font-size: 11px; font-weight: 700; color: var(--violet); }
+.cp-divider { height: 1px; background: rgba(0,0,0,0.3); }
+
+.cp-section { padding: 20px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+.cp-section.row { flex-direction: row; align-items: center; gap: 12px; padding: 20px 20px 0; }
+.cp-days { display: flex; gap: 4px; }
+.cp-day {
+  flex: 1; height: 64px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: var(--white);
+}
+.cp-day.on   { background: var(--violet); }
+.cp-day.rest { background: var(--violet-lt); }
+
+.cp-stepper-label {
+  flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: var(--muted);
+}
+.cp-stepper { display: flex; align-items: center; gap: 8px; }
+.cp-step {
+  width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
+  background: var(--cream); display: flex; align-items: center; justify-content: center;
+}
+.cp-step:disabled { opacity: 0.35; cursor: not-allowed; }
+.cp-step-value {
+  width: 60px; height: 48px; border-radius: 8px; background: var(--ink); color: var(--white);
+  display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900;
+}
+
+.cp-slots { display: flex; flex-direction: column; }
+.cp-slot {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 72px;
+  padding: 16px; background: var(--white); border: none; cursor: pointer; text-align: left;
+}
+.cp-slot:active { background: rgba(0,0,0,0.04); }
+.cp-slot-num {
+  width: 28px; height: 28px; flex-shrink: 0; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 900;
+  background: var(--white); border: 1px solid #000000; color: var(--ink);
+}
+.cp-slot-num.on   { background: var(--violet); border-color: var(--violet); color: var(--white); }
+.cp-slot-num.rest { background: var(--violet-lt); border-color: var(--violet-lt); color: var(--white); }
+.cp-slot-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cp-slot-name { font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; }
+.cp-slot-sub { font-size: 14px; color: var(--sub); }
+
+.cp-footer {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: var(--white); padding: 10px 16px 32px; display: flex; gap: 10px;
+}
+.cp-btn { flex: 1; height: 64px; border-radius: 1000px; cursor: pointer; font-size: 16px; font-weight: 900; }
+.cp-btn.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
+.cp-btn.solid { background: var(--ink); border: none; color: var(--white); }
+.cp-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ═══ CREATE A WORKOUT ═══════════════════════════════════════════════ */
+.cw-screen { background: var(--cream); display: flex; flex-direction: column; }
+.cw-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 130px; }
+.cw-section { padding: 10px 20px; display: flex; flex-direction: column; gap: 10px; }
+.cw-name-input {
+  border: none; background: transparent; outline: none;
+  font-size: 24px; font-weight: 900; color: #000000; letter-spacing: -0.5px;
+}
 .cw-name-input::placeholder { color: rgba(0,0,0,0.3); }
-.cw-summary { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--coral); }
+.cw-summary { font-size: 11px; font-weight: 700; color: var(--coral); }
 .cw-ex-list { display: flex; flex-direction: column; gap: 28px; }
 
-/* ─── exercise card (red 0-blur shadow = this is an EXERCISE) ─── */
+/* Exercise card — red 0-blur shadow marks it as an EXERCISE. */
 .ex-card {
   background: var(--white); border-radius: 16px; padding: 16px 16px 20px;
   box-shadow: 8px 8px 0 0 var(--coral-dk);
-  display: flex; flex-direction: column; gap: 12px;
-  margin-right: 8px;
+  display: flex; flex-direction: column; gap: 12px; margin-right: 8px;
 }
 .ex-card-top { display: flex; align-items: flex-start; gap: 12px; }
 .ex-num {
@@ -223,20 +282,12 @@ input, textarea { font-family: inherit; }
   font-size: 14px; font-weight: 900; color: var(--ink);
 }
 .ex-card-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.ex-card-name {
-  font-size: 24px; font-weight: 900; color: #000000;
-  letter-spacing: -0.5px; overflow-wrap: anywhere;
-}
-.ex-card-detail {
-  font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--coral);
-}
+.ex-card-name { font-size: 24px; font-weight: 900; color: #000000; letter-spacing: -0.5px; overflow-wrap: anywhere; }
+.ex-card-detail { font-size: 11px; font-weight: 700; color: var(--coral); }
 .ex-close { background: none; border: none; cursor: pointer; padding: 0; display: flex; flex-shrink: 0; }
 
-/* ─── stepper: target sets / goal reps ─── */
 .stepper-row { display: flex; align-items: center; gap: 12px; }
-.stepper-label {
-  flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: var(--muted);
-}
+.stepper-label { flex: 1; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: var(--muted); }
 .stepper { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .stepper-btn {
   width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
@@ -244,135 +295,126 @@ input, textarea { font-family: inherit; }
 }
 .stepper-value {
   width: 60px; height: 48px; border-radius: 8px; background: var(--ink); color: var(--white);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 24px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900;
 }
-
 .add-ex-row {
   width: 100%; min-height: 48px; border-radius: 16px; border: none; cursor: pointer;
   background: var(--cream-dk); color: var(--ink);
   display: flex; align-items: center; justify-content: center; gap: 8px;
   font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
 }
-.add-ex-plus { display: flex; }
-
 .cw-footer {
   position: absolute; left: 0; right: 0; bottom: 0;
-  background: var(--cream); padding: 16px 16px 32px;
-  display: flex; gap: 10px;
+  background: var(--cream); padding: 16px 16px 32px; display: flex; gap: 10px;
 }
-.cw-btn {
-  flex: 1; height: 64px; border-radius: 1000px; cursor: pointer;
-  font-size: 16px; font-weight: 900;
-}
+.cw-btn { flex: 1; height: 64px; border-radius: 1000px; cursor: pointer; font-size: 16px; font-weight: 900; }
 .cw-btn.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
 .cw-btn.solid { background: var(--ink); border: none; color: var(--white); }
 .cw-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* ═══ CHOOSE AN EXERCISE (red = exercises) ═══════════════════════════ */
+/* ═══ ADD EXERCISE ═══════════════════════════════════════════════════ */
 .ce-screen { background: var(--white); display: flex; flex-direction: column; }
-/* The search strip continues the red header so the white pills read. */
+.ce-header {
+  flex-shrink: 0; background: var(--coral); padding: 62px 16px 16px;
+  display: flex; align-items: center; gap: 16px;
+}
+.hdr-back.white { background: var(--white); }
+.ce-title { flex: 1; font-size: 18px; font-weight: 700; color: var(--white); }
+.ce-create {
+  height: 48px; padding: 0 16px; border: none; cursor: pointer; border-radius: 1000px;
+  background: var(--white); color: var(--ink); font-size: 16px; font-weight: 500;
+}
 .ce-searchbar {
-  background: var(--coral); padding: 0 20px 16px;
-  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  flex-shrink: 0; background: var(--white); padding: 16px;
+  display: flex; flex-direction: column; gap: 16px;
 }
 .ce-search {
-  flex: 1; height: 48px; border-radius: 999px; background: var(--white);
-  display: flex; align-items: center; gap: 8px; padding: 0 16px; min-width: 0;
+  height: 48px; border-radius: 999px; background: var(--white); border: 1px solid rgba(0,0,0,0.25);
+  display: flex; align-items: center; gap: 10px; padding: 0 16px;
 }
 .ce-search input {
   flex: 1; min-width: 0; border: none; background: transparent; outline: none;
   font-size: 16px; font-weight: 500; color: var(--ink);
 }
 .ce-search input::placeholder { color: var(--muted); }
-.ce-add {
-  width: 48px; height: 48px; border-radius: 999px; border: none; cursor: pointer; padding: 0;
-  background: var(--white); display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+.ce-filters { display: flex; gap: 10px; }
+.ce-filter {
+  flex: 1; height: 48px; border-radius: 8px; border: none; cursor: pointer;
+  background: var(--cream); color: var(--ink); padding: 0 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 4px;
+  font-size: 14px; font-weight: 500;
 }
+/* Active filter: dark red, white label with a count, X to clear. */
+.ce-filter.on { background: var(--coral-dk); color: var(--white); }
+
 .ce-scroll { flex: 1; min-height: 0; overflow-y: auto; background: var(--white); padding-bottom: 32px; }
-.ce-label-row { padding: 12px 20px 4px; }
+.ce-label-row { padding: 8px 20px 4px; }
 .ce-group-row {
   width: 100%; display: flex; align-items: center; gap: 10px;
   padding: 8px 16px; background: var(--white); border: none; cursor: pointer; text-align: left;
 }
 .ce-group-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-/* Exercise rows carry no icon badge — just the name and its details. */
-.ce-row {
-  width: 100%; min-height: 64px; padding: 12px 20px 12px 32px;
+
+.ex-row {
+  width: 100%; min-height: 68px; padding: 14px 16px;
   display: flex; align-items: center; gap: 8px;
-  background: var(--white); border: none; cursor: pointer; text-align: left;
+  background: var(--cream); border: none; border-bottom: 1px solid rgba(0,0,0,0.05);
+  cursor: pointer; text-align: left;
 }
-.ce-row:active { background: rgba(0,0,0,0.04); }
-.ce-row-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.ce-row-name { font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; }
-.ce-row-sub { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--coral); }
-.ce-empty { padding: 24px 20px; font-size: 14px; color: var(--muted); }
-
-/* ═══ CHOOSE A MUSCLE GROUP ══════════════════════════════════════════ */
-.cm-screen { background: var(--white); display: flex; flex-direction: column; }
-.cm-label { padding: 12px 20px 4px; }
-.cm-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 32px; display: flex; flex-direction: column; gap: 8px; }
-.cm-card {
-  display: flex; align-items: center; gap: 10px; min-height: 92px; padding: 16px;
-  border-radius: 16px; background: var(--white); border: none; cursor: pointer;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+.ex-row:active { background: var(--cream-dk); }
+.ex-row-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ex-row-name { font-size: 16px; font-weight: 500; color: #000000; overflow-wrap: anywhere; }
+.ex-row-sub { font-family: 'Gabarito', 'Inter', sans-serif; font-size: 14px; color: var(--sub); }
+.ex-add-row {
+  width: 100%; min-height: 72px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 8px;
+  background: #E0E0E0; border: none; cursor: pointer; text-align: left;
 }
-.cm-name { flex: 1; text-align: left; font-size: 16px; font-weight: 800; color: #000000; }
+.ex-add-text { flex: 1; font-size: 16px; font-weight: 500; color: #000000; }
+.ce-empty { padding: 24px 20px; font-size: 15px; color: var(--muted); }
 
-/* ═══ CREATE AN EXERCISE (red) ═══════════════════════════════════════ */
+/* ═══ CREATE AN EXERCISE ═════════════════════════════════════════════ */
 .cfg-screen { background: var(--coral); display: flex; flex-direction: column; }
 .cfg-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 130px; }
 .cfg-section { padding: 10px 20px; display: flex; flex-direction: column; gap: 10px; }
-.cfg-name-row { display: flex; align-items: center; gap: 8px; }
 .cfg-name {
-  flex: 1; min-width: 0; border: none; background: transparent; outline: none;
+  border: none; background: transparent; outline: none;
   font-size: 24px; font-weight: 900; color: var(--white); letter-spacing: -0.5px;
 }
 .cfg-name::placeholder { color: rgba(255,255,255,0.5); }
-/* Auto-populated red-on-white detail line mirroring the exercise cards. */
 .cfg-detail {
   align-self: flex-start; background: var(--white); color: var(--coral);
-  border-radius: 8px; padding: 4px 8px;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700;
 }
+.cfg-eq-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.cfg-eq-label { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: rgba(255,255,255,0.6); }
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
-  min-height: 40px; padding: 10px 16px; border-radius: 999px; cursor: pointer;
+  min-height: 40px; padding: 10px 14px; border-radius: 999px; cursor: pointer;
   background: transparent; border: 2px solid rgba(255,255,255,0.5); color: var(--white);
   font-size: 14px; font-weight: 700;
 }
 .chip.on { background: var(--white); color: var(--coral); border-color: var(--white); }
-.cfg-notes {
-  border: none; border-radius: 16px; padding: 14px; outline: none; resize: none;
-  background: rgba(255,255,255,0.15); color: var(--white);
-  font-size: 15px; font-weight: 500; line-height: 1.45;
-}
-.cfg-notes::placeholder { color: rgba(255,255,255,0.55); }
 .cfg-footer {
   position: absolute; left: 0; right: 0; bottom: 0;
   background: var(--coral); padding: 16px 16px 32px; display: flex; gap: 10px;
 }
-.cfg-btn {
-  flex: 1; height: 64px; border-radius: 1000px; cursor: pointer;
-  font-size: 16px; font-weight: 900;
-}
+.cfg-btn { flex: 1; height: 64px; border-radius: 1000px; cursor: pointer; font-size: 16px; font-weight: 900; }
 .cfg-btn.ghost { background: transparent; border: 2px solid var(--white); color: var(--white); }
 .cfg-btn.solid { background: var(--ink); border: none; color: var(--white); }
 .cfg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* ═══ TODAY'S PLAN (violet = workouts) ═══════════════════════════════ */
+/* ═══ TODAY'S PLAN ═══════════════════════════════════════════════════ */
 .plan-screen { background: var(--violet); }
 .plan-body-art {
   position: absolute; left: 178px; top: 16px; width: 215px; height: 821px;
   pointer-events: none; user-select: none;
 }
 .plan-content {
-  position: relative; z-index: 1;
-  padding: 38px 20px 24px; display: flex; flex-direction: column; gap: 16px;
+  position: relative; z-index: 1; padding: 38px 20px 24px;
+  display: flex; flex-direction: column; gap: 16px;
   max-height: calc(852px - 118px); overflow-y: auto;
 }
-/* When the edit controls appear the list gets less room. */
 .plan-content.with-controls { max-height: calc(852px - 206px); }
 .plan-back {
   width: 48px; height: 48px; border-radius: 1000px; border: none; cursor: pointer; padding: 0;
@@ -384,7 +426,6 @@ input, textarea { font-family: inherit; }
   color: var(--white); opacity: 0.75; text-transform: uppercase;
 }
 .plan-title { font-size: 64px; line-height: 58px; color: var(--white); }
-
 .plan-list { display: flex; flex-direction: column; gap: 8px; }
 .plan-row { display: flex; align-items: center; gap: 14px; min-height: 52px; }
 .plan-num {
@@ -393,35 +434,26 @@ input, textarea { font-family: inherit; }
   font-size: 14px; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
 }
-.plan-num.sel { background: var(--violet-sel); }
-/* The exercise you're on right now, when the plan is opened mid-workout. */
+.plan-num.sel { background: var(--violet-dk); }
 .plan-num.current { background: var(--mustard); color: var(--ink); }
-
 .plan-pill {
   display: inline-flex; align-items: center; min-height: 52px; padding: 12px 16px;
   border-radius: 16px; background: var(--coral); border: 2px solid var(--white);
   max-width: calc(100% - 42px); cursor: pointer; text-align: left;
 }
-/* Tapped rows go white — that's the selection affordance. */
-.plan-pill.sel { background: var(--white); border-color: var(--white); }
+.plan-pill.sel { background: var(--white); }
 .plan-pill.sel .plan-pill-name { color: var(--ink); }
 .plan-pill.add {
   background: transparent; border: 2px dashed rgba(255,255,255,0.5);
   gap: 8px; justify-content: space-between;
 }
-.plan-pill-name {
-  font-size: 17px; font-weight: 900; letter-spacing: -0.3px;
-  color: var(--white); overflow-wrap: anywhere;
-}
-
+.plan-pill-name { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; color: var(--white); overflow-wrap: anywhere; }
 .plan-footer {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-  background: var(--violet); padding: 0 20px 32px;
-  display: flex; flex-direction: column;
+  background: var(--violet); padding: 0 20px 32px; display: flex; flex-direction: column;
 }
 .plan-controls {
-  display: flex; align-items: center; gap: 12px;
-  padding: 16px 0; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 12px; padding: 16px 0; margin-bottom: 4px;
   border-top: 1px solid var(--violet-dk); border-bottom: 1px solid var(--violet-dk);
 }
 .plan-controls-label { flex: 1; font-size: 14px; font-weight: 700; color: var(--white); }
@@ -439,40 +471,33 @@ input, textarea { font-family: inherit; }
 }
 .plan-go:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* ═══ LOGGING SCREEN (red = exercises) ═══════════════════════════════
+/* ═══ LOGGING ════════════════════════════════════════════════════════
    Progress tracker fixed at the top; only the dark area scrolls. */
 .log-screen { display: flex; flex-direction: column; background: var(--coral-dk); }
-
 .log-progress {
   flex-shrink: 0; background: var(--coral);
-  padding: 32px 20px 20px; display: flex; flex-direction: column; gap: 12px;
+  padding: 72px 16px 20px; display: flex; flex-direction: column; gap: 12px;
 }
 .log-title-block { display: flex; flex-direction: column; gap: 2px; }
-.log-exercise-name { font-size: 40px; line-height: 42px; color: var(--white); overflow-wrap: anywhere; }
-.log-detail-line {
-  font-size: 10px; font-weight: 700; letter-spacing: 1px;
-  color: rgba(255,255,255,0.75);
+.log-exercise-name {
+  font-size: 32px; font-weight: 700; line-height: 39px;
+  color: var(--white); overflow-wrap: anywhere;
 }
-
+.log-detail-line {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: rgba(255,255,255,0.75);
+}
 .log-tools { display: flex; gap: 12px; }
 .log-btn {
   width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
-  background: var(--coral-dk); color: var(--white);
-  display: flex; align-items: center; justify-content: center; gap: 10px; flex-shrink: 0;
+  background: var(--coral-dk); display: flex; align-items: center; justify-content: center;
 }
-.log-btn.wide {
-  flex: 1; padding: 0 12px;
-  font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px;
-}
-
 .log-pips { display: flex; gap: 8px; height: 6px; }
 .log-pip { height: 6px; flex: 1; border-radius: 999px; }
 .log-pip.done    { background: var(--white); }
-.log-pip.current { background: var(--ink); }
+.log-pip.current { background: #000000; }
 .log-pip.pending { background: rgba(0,0,0,0.3); }
-
 .log-nav { display: flex; align-items: center; justify-content: space-between; }
-.log-exercise-count { font-size: 13px; font-weight: 500; color: var(--white); opacity: 0.85; }
+.log-exercise-count { font-size: 13px; font-weight: 500; color: var(--white); }
 .log-nav-btns { display: flex; gap: 12px; }
 .log-round {
   width: 48px; height: 48px; border-radius: 999px; border: none; cursor: pointer; padding: 0;
@@ -482,52 +507,48 @@ input, textarea { font-family: inherit; }
 
 .log-body {
   flex: 1; min-height: 0; overflow-y: auto;
-  background: var(--coral-dk); padding: 24px 20px 0;
+  background: var(--coral-dk); padding: 16px 16px 112px;
   display: flex; flex-direction: column; gap: 12px;
 }
-.log-buttons { display: flex; gap: 12px; flex-shrink: 0; }
+.log-buttons { display: flex; gap: 10px; flex-shrink: 0; }
 .ss-btn {
-  flex: 1; height: 48px; border-radius: 1000px; cursor: pointer;
-  font-size: 14px; font-weight: 700;
+  flex: 1; height: 48px; border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
+  font-size: 14px; font-weight: 500;
 }
 .ss-btn.outline { background: transparent; border: 2px solid var(--white); color: var(--white); }
 .ss-btn.solid   { background: var(--ink); color: var(--white); border: none; }
-/* Pushed to the bottom so the legs reach the screen edge. */
-.log-bodymap { display: block; width: 393px; height: auto; margin: auto -20px 0; pointer-events: none; }
 
-/* ─── logged set cells ─── */
-.set-group { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; flex-shrink: 0; }
+/* ─── logged set cells: cream, 8px group, square badges ─── */
+.set-group { display: flex; flex-direction: column; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
 .set-cell {
   display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px;
-  background: rgba(255,255,255,0.6);
+  background: var(--cream);
 }
+.set-cell + .set-cell { border-top: 1px solid rgba(0,0,0,0.06); }
 .set-cell.tappable { cursor: pointer; }
-.set-cell.tappable:active { background: rgba(255,255,255,0.78); }
+.set-cell.tappable:active { background: var(--cream-dk); }
 .sc-badge {
-  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: 4px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; font-weight: 900; background: var(--ink); color: var(--white);
 }
-.set-cell.warmup .sc-badge { background: var(--warmup); }
+.sc-badge.warmup { background: #828282; }
 .sc-data { flex: 1; display: flex; align-items: center; gap: 4px; }
 .sc-wr { font-size: 16px; font-weight: 700; color: var(--ink); }
 .sc-x  { font-size: 14px; font-weight: 400; color: var(--ink); }
-.sc-rpe {
+.sc-tag {
   display: inline-flex; align-items: center; height: 28px; padding: 4px 10px;
   border-radius: 4px; background: var(--white);
   font-size: 12px; font-weight: 700; white-space: nowrap;
 }
-/* Failure is a win — brand violet, filled. */
-.sc-rpe.failure {
+.sc-tag.failure {
   background: var(--violet); color: var(--white);
-  min-width: 28px; justify-content: center; padding: 4px 8px;
+  min-width: 28px; justify-content: center;
 }
-.sc-rpe.add-rpe {
-  background: transparent; color: var(--violet);
-  border: 1px dashed var(--violet); font-weight: 800;
-}
+.sc-tag.add-rpe { background: transparent; color: var(--violet); border: 1px dashed var(--violet); font-weight: 800; }
 
-.next-bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 12px 20px 32px; }
+.next-bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 10px 20px 32px; background: var(--coral-dk); }
 .next-btn {
   width: 100%; height: 64px; border: none; cursor: pointer; border-radius: 1000px;
   background: var(--ink); color: var(--white);
@@ -540,66 +561,34 @@ input, textarea { font-family: inherit; }
   position: absolute; inset: 0; z-index: 10; background: rgba(0,0,0,0.32);
   display: flex; align-items: flex-end;
 }
-.log-sheet {
+.sheet {
   width: 100%; max-height: 88%; overflow-y: auto;
-  background: var(--cream); border-radius: 24px 24px 0 0;
-  padding: 16px 16px 24px; display: flex; flex-direction: column; gap: 12px;
+  background: var(--cream); border-radius: 32px 32px 0 0;
+  padding: 16px 16px 22px; display: flex; flex-direction: column; gap: 10px;
 }
-.sheet-handle {
-  width: 40px; height: 4px; border-radius: 2px; background: #DDD6C8;
-  align-self: center; flex-shrink: 0;
-}
-.sheet-title { font-size: 48px; line-height: 46px; }
-.sheet-title.red { color: var(--coral-dk); }
-.sheet-title.violet { color: var(--violet-dk); }
-.sheet-footer { padding-top: 4px; }
+.sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: #DDD6C8; align-self: center; flex-shrink: 0; }
+.sheet-title { font-size: 54px; line-height: 48px; }
+.sheet-title.red { color: var(--coral); }
+.sheet-title.violet { color: var(--violet); }
+.sheet-body { display: flex; flex-direction: column; }
 .sheet-close {
   width: 100%; height: 48px; border-radius: 1000px; cursor: pointer;
   background: transparent; border: 2px solid var(--ink); color: var(--ink);
-  font-size: 14px; font-weight: 700;
+  font-size: 14px; font-weight: 700; margin-top: 8px;
 }
 .sheet-empty { font-size: 14px; color: var(--muted); padding: 8px 4px; }
-
-.opt-group { display: flex; flex-direction: column; }
-.opt-label {
-  font-size: 11px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; color: var(--ink); padding: 12px 4px 4px;
-}
-.opt-row {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  min-height: 64px; padding: 12px 4px; background: transparent; border: none;
-  cursor: pointer; text-align: left;
-}
-.opt-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.opt-title { font-size: 16px; font-weight: 800; color: #000000; }
-.opt-blurb {
-  font-family: 'Gabarito', 'Inter', sans-serif;
-  font-size: 14px; font-weight: 400; color: var(--muted); line-height: 1.35;
-}
-.opt-check {
-  width: 24px; height: 24px; border-radius: 8px; flex-shrink: 0;
-  background: var(--white); border: 1px solid var(--badge-bg);
-  display: flex; align-items: center; justify-content: center;
-}
-.opt-check.on { background: var(--coral); border-color: var(--coral); }
 
 .swap-head { display: flex; align-items: center; gap: 12px; padding: 8px 4px; }
 .swap-head-text { display: flex; flex-direction: column; min-width: 0; }
 .swap-row {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  min-height: 60px; padding: 12px 4px; background: transparent; border: none;
-  cursor: pointer; text-align: left;
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px;
+  padding: 12px 4px; background: transparent; border: none; cursor: pointer; text-align: left;
 }
 .swap-row:active { background: rgba(0,0,0,0.04); }
 .swap-row.add { border-top: 1px solid rgba(0,0,0,0.08); margin-top: 4px; }
+.swap-row-text { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .swap-row-name { flex: 1; font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; }
-
-.last-time-row {
-  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
-  border-radius: 12px; background: rgba(0,0,0,0.05); flex-shrink: 0;
-}
-.lt-badge { font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap; }
-.lt-data { flex: 1; display: flex; align-items: center; gap: 4px; }
+.swap-row-sub { font-size: 13px; color: var(--sub); }
 
 .pause-copy { font-size: 15px; line-height: 1.45; color: var(--ink); padding: 0 4px; }
 .pause-actions { display: flex; gap: 10px; padding-top: 8px; }
@@ -607,86 +596,120 @@ input, textarea { font-family: inherit; }
 .pause-btn.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
 .pause-btn.confirm { background: var(--ink); border: none; color: var(--white); }
 
+/* ─── filter sheets ─── */
+.filter-sheet .sheet-body { gap: 16px; }
+.filter-label { font-size: 11px; font-weight: 700; color: #000000; letter-spacing: 0.5px; }
+.filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+.filter-card {
+  display: flex; align-items: center; gap: 10px; min-height: 76px; padding: 8px;
+  background: var(--white); border: 2px solid transparent; border-radius: 16px;
+  cursor: pointer; text-align: left;
+}
+.filter-card.on { border-color: var(--coral); }
+.filter-card-name { font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere; }
+.filter-eq-group { display: flex; flex-direction: column; }
+.filter-chip {
+  min-height: 56px; padding: 8px 16px; border-radius: 16px;
+  background: var(--white); border: 2px solid transparent; cursor: pointer;
+  font-size: 16px; font-weight: 500; color: #000000; text-align: left;
+}
+.filter-chip.on { border-color: var(--coral); }
+.filter-actions { display: flex; gap: 10px; padding-top: 16px; }
+.filter-btn { flex: 1; height: 64px; border-radius: 1000px; cursor: pointer; font-size: 16px; font-weight: 900; }
+.filter-btn.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
+.filter-btn.solid { background: var(--ink); border: none; color: var(--white); }
+
 /* ═══ SET WIDGET ═════════════════════════════════════════════════════ */
-.set-widget {
-  background: var(--white); border-radius: 20px; padding: 20px 16px 16px;
-  display: flex; flex-direction: column; gap: 16px;
+.set-sheet { background: var(--white); gap: 12px; }
+.last-time-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  border-radius: 12px; background: var(--cream); flex-shrink: 0;
 }
-.sw-label { font-size: 14px; font-weight: 800; letter-spacing: 1px; color: var(--muted); }
+.lt-badge { font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap; }
+.lt-data { flex: 1; font-size: 14px; font-weight: 700; color: var(--ink); }
+
+.set-widget { display: flex; flex-direction: column; gap: 12px; }
+.sw-header { font-size: 13px; font-weight: 900; color: #999999; letter-spacing: 0.5px; }
+.sw-fields { display: flex; flex-direction: column; gap: 12px; }
 .sw-group { display: flex; flex-direction: column; gap: 8px; align-items: center; }
-.sw-field-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #9A9A9A; }
-.sw-controls { display: flex; align-items: center; gap: 8px; justify-content: center; }
-.nc-btn {
-  min-width: 52px; height: 68px; border-radius: 14px; border: none; cursor: pointer;
-  background: var(--cream); color: var(--ink); font-size: 18px; font-weight: 800;
+.sw-field-label { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: var(--field-lbl); }
+.sw-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.sw-row.reps { gap: 20px; }
+.sw-step {
+  width: 48px; height: 48px; flex-shrink: 0; border-radius: 14px; border: none; cursor: pointer;
+  background: var(--cream); color: var(--step-txt); font-size: 15px; font-weight: 700;
 }
-.nc-btn.wide { min-width: 58px; }
-.nc-value {
-  display: flex; align-items: baseline; justify-content: center; gap: 4px;
-  min-width: 128px; height: 88px; border-radius: 16px; background: var(--ink); padding: 0 12px;
+.sw-step.small { font-size: 13px; }
+.sw-value {
+  width: 100px; height: 64px; flex-shrink: 0; border-radius: 16px; background: var(--ink);
+  display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 10px;
 }
-.nc-value.reps { min-width: 110px; }
-.nc-value input {
+.sw-value.reps { border-radius: 14px; }
+.sw-value input {
   width: 100%; min-width: 0; border: none; background: transparent; outline: none;
-  color: var(--white); font-size: 40px; font-weight: 900; text-align: center;
+  color: var(--white); font-size: 24px; font-weight: 900; text-align: center;
   -moz-appearance: textfield;
 }
-.nc-value input::-webkit-outer-spin-button,
-.nc-value input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.nc-unit { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.7); }
+.sw-value input::-webkit-outer-spin-button,
+.sw-value input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.sw-unit { font-size: 11px; font-weight: 500; color: #888888; }
 
-/* ─── feel slider: purple ramp, failure circle at the end ─── */
-.sw-feel { padding-top: 4px; }
+/* ─── feel slider: a pill of ten purple stops ─── */
 .feel-track {
-  position: relative; display: flex; height: 64px; border-radius: 999px;
+  position: relative; height: 64px; border-radius: 999px; margin-top: 20px;
   cursor: pointer; touch-action: none; user-select: none;
 }
+.feel-fills {
+  position: absolute; inset: 0; display: flex;
+  border-radius: 999px; overflow: hidden;
+}
 .feel-seg { flex: 1; height: 100%; }
-.feel-seg:first-child { border-radius: 999px 0 0 999px; }
-/* The violet failure stop is a full circle popping off the end. */
-.feel-seg:last-child  { border-radius: 999px; }
 .feel-prompt {
   position: absolute; inset: 0; z-index: 2;
   display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
-  text-transform: uppercase; color: var(--ink); pointer-events: none;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+  color: var(--white); pointer-events: none;
 }
 .feel-knob {
-  position: absolute; top: 3px; z-index: 3;
-  width: 58px; height: 58px; margin-left: 3px; border-radius: 999px;
-  background: var(--white); pointer-events: none; box-sizing: border-box;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  position: absolute; top: 0; z-index: 3; width: 64px; height: 64px;
   display: flex; align-items: center; justify-content: center;
-  transition: left .06s linear;
+  pointer-events: none; transition: left .06s linear;
 }
 .feel-track.dragging .feel-knob { transition: none; }
-.feel-knob.failure { border: 7px solid var(--violet); }
-.feel-knob-label {
-  font-size: 12px; font-weight: 700; color: var(--ink);
-  letter-spacing: -0.2px; white-space: nowrap; text-align: center; line-height: 1;
+/* Normal: a 58px white puck. Failure: the full 64px violet circle. */
+.feel-knob::before {
+  content: ''; position: absolute; width: 58px; height: 58px; border-radius: 999px;
+  background: var(--white); box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
-.feel-knob-label.failure { font-size: 9px; color: var(--violet); }
+.feel-knob.failure::before {
+  width: 64px; height: 64px; background: var(--violet); box-shadow: none;
+}
+.feel-knob-label {
+  position: relative; z-index: 1;
+  font-size: 19px; font-weight: 700; color: var(--ink); line-height: 1;
+}
+.feel-knob.failure .feel-knob-label { color: var(--violet-dk); }
 
-.sw-footer { display: flex; justify-content: flex-end; }
+.sw-footer { display: flex; justify-content: flex-end; padding-top: 20px; }
 .done-btn {
-  min-width: 128px; height: 56px; padding: 0 28px; border-radius: 1000px;
+  min-width: 100px; height: 39px; padding: 0 16px; border-radius: 1000px;
   border: none; cursor: pointer; background: var(--ink); color: var(--white);
-  font-size: 16px; font-weight: 800;
+  font-size: 14px; font-weight: 800;
 }
 .done-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* ═══ EXERCISE HISTORY ═══════════════════════════════════════════════ */
+/* ═══ HISTORY ════════════════════════════════════════════════════════ */
 .hist-screen { background: var(--coral-dk); display: flex; flex-direction: column; }
-.hist-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 20px 32px; }
+.hist-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 32px; }
 .hist-date { padding: 16px 0 8px; }
 .hist-date .row-label { color: rgba(255,255,255,0.8); }
 .hist-sets { margin-bottom: 8px; }
 .hist-empty { color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.5; padding: 24px 0; }
 
-/* ═══ WORKOUT COMPLETE (mustard) ═════════════════════════════════════ */
+/* ═══ WORKOUT COMPLETE ═══════════════════════════════════════════════ */
 .done-screen { background: var(--mustard); display: flex; flex-direction: column; }
 .done-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 112px; }
-.done-head { padding: 72px 20px 12px; display: flex; flex-direction: column; gap: 12px; }
+.done-head { padding: 72px 16px 12px; display: flex; flex-direction: column; gap: 12px; }
 .done-head-text { display: flex; flex-direction: column; gap: 2px; }
 .done-title { font-size: 60px; line-height: 54px; color: var(--ink); }
 .done-meta { font-size: 15px; font-weight: 700; color: var(--ink); }
@@ -701,18 +724,16 @@ input, textarea { font-family: inherit; }
   width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
   background: var(--mustard-dk); display: flex; align-items: center; justify-content: center;
 }
-.done-list { padding: 12px 20px; display: flex; flex-direction: column; gap: 12px; }
+.done-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
 .done-ex { display: flex; flex-direction: column; }
 .done-ex-head {
-  background: rgba(255,255,255,0.6); border-radius: 16px 16px 0 0;
-  padding: 16px 8px; display: flex; flex-direction: column; gap: 4px;
+  background: var(--cream); border-radius: 8px 8px 0 0;
+  padding: 16px 8px 12px; display: flex; flex-direction: column; gap: 4px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
 }
-.done-ex-name {
-  font-size: 24px; font-weight: 800; color: var(--ink);
-  letter-spacing: -0.5px; overflow-wrap: anywhere;
-}
-.done-ex-sub { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--ink); opacity: 0.7; }
-.done-ex .set-group { border-radius: 0 0 16px 16px; }
+.done-ex-name { font-size: 24px; font-weight: 800; color: var(--ink); letter-spacing: -0.5px; overflow-wrap: anywhere; }
+.done-ex-sub { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: var(--ink); opacity: 0.7; }
+.done-ex .set-group { border-radius: 0 0 8px 8px; }
 .done-footer {
   position: absolute; left: 0; right: 0; bottom: 0;
   background: var(--cream); padding: 16px 20px 32px;
@@ -722,3 +743,7 @@ input, textarea { font-family: inherit; }
   background: var(--ink); color: var(--white);
   font-size: 16px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;
 }
+
+/* ═══ PLACEHOLDER ════════════════════════════════════════════════════ */
+.cs-screen { background: var(--violet); }
+.cs-copy { padding: 24px 20px; color: var(--white); font-size: 16px; line-height: 1.5; }
