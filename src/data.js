@@ -81,6 +81,21 @@ export function makeItem(exId, sets = DEFAULT_TARGET_SETS, reps = DEFAULT_GOAL_R
   return { exId, sets, reps }
 }
 
+// A workout can legitimately contain the same exercise twice (e.g. bench
+// early, then more bench at the end). Logged sets are therefore keyed by
+// SLOT, not by exercise id — otherwise the second appearance would
+// inherit the first one's sets. `slotId` is assigned when a session
+// starts and when slots are added mid-workout.
+export function withSlotIds(items) {
+  return items.map(it => ({ ...it, slotId: it.slotId || newSlotId() }))
+}
+
+let slotCounter = 0
+export function newSlotId() {
+  slotCounter += 1
+  return `slot-${Date.now().toString(36)}-${slotCounter}`
+}
+
 export const MONTHS_SHORT = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
   'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 export const MONTHS_LONG = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY',

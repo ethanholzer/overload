@@ -4,8 +4,10 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 :root {
-  --cream:      #F4EFE6;
-  --cream-dk:   #ECE6DA;
+  --cream:      #EEEEEE;
+  --cream-dk:   #E2E2E2;
+  --sage:       #C3D5C0;
+  --sage-dk:    #A8BFA4;
   --violet:     #6C5CE7;
   --violet-dk:  #5346C4;
   --violet-lt:  #AAA2E7;
@@ -44,26 +46,32 @@ input, textarea { font-family: inherit; }
 }
 
 /* ═══ SHARED ═════════════════════════════════════════════════════════ */
-.hdr { display: flex; align-items: center; gap: 12px; padding: 62px 16px 16px; flex-shrink: 0; }
+.hdr {
+  display: flex; align-items: center; gap: 12px; padding: 62px 16px 16px;
+  flex-shrink: 0; border-bottom: 2px solid var(--ink);
+}
 .hdr-back {
   width: 48px; height: 48px; border-radius: 1000px; border: none; cursor: pointer; padding: 0;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .hdr-title { font-size: 48px; line-height: 46px; overflow-wrap: anywhere; }
 
-.hdr-violet { background: var(--violet); }
-.hdr-violet .hdr-back { background: var(--white); }
-.hdr-violet .hdr-back svg path { fill: var(--violet); }
-.hdr-violet .hdr-title { color: var(--white); }
+/* Headers are always a neutral surface (white or cream). The tone lives
+   in the back button and title colour: violet for workout-side screens,
+   red for exercise-side ones. */
+.hdr-violet { background: var(--cream); }
+.hdr-violet .hdr-back { background: var(--violet); }
+.hdr-violet .hdr-back svg path { fill: var(--white); }
+.hdr-violet .hdr-title { color: var(--violet); }
 
 .hdr-cream { background: var(--cream); }
 .hdr-cream .hdr-back { background: var(--violet); }
 .hdr-cream .hdr-title { color: var(--violet); }
 
-.hdr-red { background: var(--coral); }
-.hdr-red .hdr-back { background: var(--white); }
-.hdr-red .hdr-back svg path { fill: var(--coral); }
-.hdr-red .hdr-title { color: var(--white); }
+.hdr-red { background: var(--white); }
+.hdr-red .hdr-back { background: var(--coral); }
+.hdr-red .hdr-back svg path { fill: var(--white); }
+.hdr-red .hdr-title { color: var(--coral); }
 
 .hdr-white { background: var(--white); }
 .hdr-white .hdr-back { background: var(--violet); }
@@ -104,10 +112,11 @@ input, textarea { font-family: inherit; }
 .start-section { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; }
 
 /* Workout card — violet 0-blur shadow marks it as a WORKOUT. */
+/* Violet spine marks it as a WORKOUT. */
 .wk-card {
-  background: var(--white); border-radius: 16px; padding: 16px 16px 20px;
-  box-shadow: 8px 8px 0 0 var(--violet);
-  display: flex; flex-direction: column; gap: 24px; margin-right: 8px;
+  background: var(--white); border-radius: 0; padding: 16px 16px 20px;
+  border-left: 8px solid var(--violet);
+  display: flex; flex-direction: column; gap: 24px;
 }
 .wk-card-top { display: flex; align-items: flex-start; gap: 12px; }
 .wk-card-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
@@ -142,9 +151,11 @@ input, textarea { font-family: inherit; }
 }
 
 /* Bottom sheet: active plan, or the two zero-state entry points. */
+/* Flat top edge with a hard 2px rule — this panel is a shelf, not a
+   floating card. */
 .start-bottom {
   flex-shrink: 0; background: var(--white);
-  border-radius: 24px 24px 0 0; padding: 16px 16px 40px;
+  border-radius: 0; border-top: 2px solid var(--ink); padding: 16px 16px 40px;
 }
 .start-cta-stack { display: flex; flex-direction: column; gap: 12px; padding: 8px 0; }
 .start-cta {
@@ -161,7 +172,7 @@ input, textarea { font-family: inherit; }
   background: var(--green); color: var(--white); border-radius: 8px; padding: 4px 8px;
   font-size: 11px; font-weight: 700; margin-right: auto;
 }
-.plan-card-name { font-size: 24px; font-weight: 900; color: #000000; letter-spacing: -0.5px; }
+.plan-card-name { font-size: 40px; line-height: 44px; font-weight: 900; color: #000000; letter-spacing: -1px; }
 .plan-days { display: flex; gap: 4px; margin-top: 4px; }
 .plan-day {
   flex: 1; height: 64px; border-radius: 8px;
@@ -251,6 +262,7 @@ input, textarea { font-family: inherit; }
 .cp-footer {
   position: absolute; left: 0; right: 0; bottom: 0;
   background: var(--white); padding: 10px 16px 32px; display: flex; gap: 10px;
+  border-top: 2px solid var(--ink); border-radius: 0;
 }
 .cp-btn { flex: 1; height: 64px; border-radius: 1000px; cursor: pointer; font-size: 16px; font-weight: 900; }
 .cp-btn.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
@@ -270,10 +282,12 @@ input, textarea { font-family: inherit; }
 .cw-ex-list { display: flex; flex-direction: column; gap: 28px; }
 
 /* Exercise card — red 0-blur shadow marks it as an EXERCISE. */
+/* Sharp corners with a red spine on the left edge — the colour marks it
+   as an EXERCISE without needing a shadow. */
 .ex-card {
-  background: var(--white); border-radius: 16px; padding: 16px 16px 20px;
-  box-shadow: 8px 8px 0 0 var(--coral-dk);
-  display: flex; flex-direction: column; gap: 12px; margin-right: 8px;
+  background: var(--white); border-radius: 0; padding: 16px 16px 20px;
+  border-left: 8px solid var(--coral);
+  display: flex; flex-direction: column; gap: 12px;
 }
 .ex-card-top { display: flex; align-items: flex-start; gap: 12px; }
 .ex-num {
@@ -306,6 +320,7 @@ input, textarea { font-family: inherit; }
 .cw-footer {
   position: absolute; left: 0; right: 0; bottom: 0;
   background: var(--cream); padding: 16px 16px 32px; display: flex; gap: 10px;
+  border-top: 2px solid var(--ink); border-radius: 0;
 }
 .cw-btn { flex: 1; height: 64px; border-radius: 1000px; cursor: pointer; font-size: 16px; font-weight: 900; }
 .cw-btn.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
@@ -315,21 +330,28 @@ input, textarea { font-family: inherit; }
 /* ═══ ADD EXERCISE ═══════════════════════════════════════════════════ */
 .ce-screen { background: var(--white); display: flex; flex-direction: column; }
 .ce-header {
-  flex-shrink: 0; background: var(--coral); padding: 62px 16px 16px;
+  flex-shrink: 0; background: var(--white); padding: 62px 16px 16px;
+  border-bottom: 2px solid var(--ink);
   display: flex; align-items: center; gap: 16px;
 }
-.hdr-back.white { background: var(--white); }
-.ce-title { flex: 1; font-size: 18px; font-weight: 700; color: var(--white); }
+.hdr-back.white { background: var(--coral); }
+.hdr-back.white svg path { fill: var(--white); }
+.ce-title {
+  flex: 1; text-align: center; font-size: 18px; font-weight: 700; color: var(--ink);
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
 .ce-create {
   height: 48px; padding: 0 16px; border: none; cursor: pointer; border-radius: 1000px;
-  background: var(--white); color: var(--ink); font-size: 16px; font-weight: 500;
+  background: var(--coral); color: var(--white); font-size: 16px; font-weight: 500;
+  flex-shrink: 0;
 }
 .ce-searchbar {
   flex-shrink: 0; background: var(--white); padding: 16px;
   display: flex; flex-direction: column; gap: 16px;
 }
 .ce-search {
-  height: 48px; border-radius: 999px; background: var(--white); border: 1px solid rgba(0,0,0,0.25);
+  height: 48px; border-radius: 999px; background: var(--white);
+  border: 2px solid var(--ink);
   display: flex; align-items: center; gap: 10px; padding: 0 16px;
 }
 .ce-search input {
@@ -397,7 +419,8 @@ input, textarea { font-family: inherit; }
 .chip.on { background: var(--white); color: var(--coral); border-color: var(--white); }
 .cfg-footer {
   position: absolute; left: 0; right: 0; bottom: 0;
-  background: var(--coral); padding: 16px 16px 32px; display: flex; gap: 10px;
+  background: var(--white); padding: 10px 16px 32px; display: flex; gap: 10px;
+  border-top: 2px solid var(--ink); border-radius: 0;
 }
 .cfg-btn { flex: 1; height: 64px; border-radius: 1000px; cursor: pointer; font-size: 16px; font-weight: 900; }
 .cfg-btn.ghost { background: transparent; border: 2px solid var(--white); color: var(--white); }
@@ -438,19 +461,21 @@ input, textarea { font-family: inherit; }
 .plan-num.current { background: var(--mustard); color: var(--ink); }
 .plan-pill {
   display: inline-flex; align-items: center; min-height: 52px; padding: 12px 16px;
-  border-radius: 16px; background: var(--coral); border: 2px solid var(--white);
+  border-radius: 0; background: var(--coral); border: none;
+  border-left: 8px solid var(--white);
   max-width: calc(100% - 42px); cursor: pointer; text-align: left;
 }
-.plan-pill.sel { background: var(--white); }
+.plan-pill.sel { background: var(--white); border-left-color: var(--white); }
 .plan-pill.sel .plan-pill-name { color: var(--ink); }
 .plan-pill.add {
   background: transparent; border: 2px dashed rgba(255,255,255,0.5);
-  gap: 8px; justify-content: space-between;
+  border-radius: 0; gap: 8px; justify-content: space-between;
 }
 .plan-pill-name { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; color: var(--white); overflow-wrap: anywhere; }
 .plan-footer {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
-  background: var(--violet); padding: 0 20px 32px; display: flex; flex-direction: column;
+  background: var(--violet); padding: 12px 20px 32px; display: flex; flex-direction: column;
+  border-top: 2px solid var(--ink); border-radius: 0;
 }
 .plan-controls {
   display: flex; align-items: center; gap: 12px; padding: 16px 0; margin-bottom: 4px;
@@ -473,10 +498,11 @@ input, textarea { font-family: inherit; }
 
 /* ═══ LOGGING ════════════════════════════════════════════════════════
    Progress tracker fixed at the top; only the dark area scrolls. */
-.log-screen { display: flex; flex-direction: column; background: var(--coral-dk); }
+.log-screen { display: flex; flex-direction: column; background: var(--cream); }
 .log-progress {
   flex-shrink: 0; background: var(--coral);
   padding: 72px 16px 20px; display: flex; flex-direction: column; gap: 12px;
+  border-bottom: 2px solid var(--ink);
 }
 .log-title-block { display: flex; flex-direction: column; gap: 2px; }
 .log-exercise-name {
@@ -505,9 +531,11 @@ input, textarea { font-family: inherit; }
 }
 .log-round:disabled { opacity: 0.35; cursor: not-allowed; }
 
+/* Only the progress tracker at the top stays red; the working area
+   below it is the neutral cream. */
 .log-body {
   flex: 1; min-height: 0; overflow-y: auto;
-  background: var(--coral-dk); padding: 16px 16px 112px;
+  background: var(--cream); padding: 16px 16px 112px;
   display: flex; flex-direction: column; gap: 12px;
 }
 .log-buttons { display: flex; gap: 10px; flex-shrink: 0; }
@@ -516,18 +544,19 @@ input, textarea { font-family: inherit; }
   display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
   font-size: 14px; font-weight: 500;
 }
-.ss-btn.outline { background: transparent; border: 2px solid var(--white); color: var(--white); }
+.ss-btn.outline { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
+.ss-btn.outline svg path { fill: var(--ink); }
 .ss-btn.solid   { background: var(--ink); color: var(--white); border: none; }
 
 /* ─── logged set cells: cream, 8px group, square badges ─── */
 .set-group { display: flex; flex-direction: column; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
 .set-cell {
   display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px;
-  background: var(--cream);
+  background: var(--white);
 }
 .set-cell + .set-cell { border-top: 1px solid rgba(0,0,0,0.06); }
 .set-cell.tappable { cursor: pointer; }
-.set-cell.tappable:active { background: var(--cream-dk); }
+.set-cell.tappable:active { background: var(--cream); }
 .sc-badge {
   width: 36px; height: 36px; border-radius: 4px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
@@ -548,7 +577,11 @@ input, textarea { font-family: inherit; }
 }
 .sc-tag.add-rpe { background: transparent; color: var(--violet); border: 1px dashed var(--violet); font-weight: 800; }
 
-.next-bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 10px 20px 32px; background: var(--coral-dk); }
+.next-bar {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  padding: 10px 20px 32px; background: var(--cream);
+  border-top: 2px solid var(--ink); border-radius: 0;
+}
 .next-btn {
   width: 100%; height: 64px; border: none; cursor: pointer; border-radius: 1000px;
   background: var(--ink); color: var(--white);
@@ -557,10 +590,13 @@ input, textarea { font-family: inherit; }
 }
 
 /* ═══ SHEETS ═════════════════════════════════════════════════════════ */
+/* Fixed, not absolute: a sheet opened from a card near the bottom of
+   the page must still rise from the bottom of the SCREEN. */
 .sheet-overlay {
-  position: absolute; inset: 0; z-index: 10; background: rgba(0,0,0,0.32);
-  display: flex; align-items: flex-end;
+  position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.32);
+  display: flex; align-items: flex-end; justify-content: center;
 }
+.sheet-overlay > * { width: 393px; max-width: 100%; }
 .sheet {
   width: 100%; max-height: 88%; overflow-y: auto;
   background: var(--cream); border-radius: 32px 32px 0 0;
@@ -707,7 +743,8 @@ input, textarea { font-family: inherit; }
 .hist-empty { color: rgba(255,255,255,0.85); font-size: 15px; line-height: 1.5; padding: 24px 0; }
 
 /* ═══ WORKOUT COMPLETE ═══════════════════════════════════════════════ */
-.done-screen { background: var(--mustard); display: flex; flex-direction: column; }
+/* Sage surface with deeper-sage action buttons. */
+.done-screen { background: var(--sage); display: flex; flex-direction: column; }
 .done-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 112px; }
 .done-head { padding: 72px 16px 12px; display: flex; flex-direction: column; gap: 12px; }
 .done-head-text { display: flex; flex-direction: column; gap: 2px; }
@@ -716,13 +753,13 @@ input, textarea { font-family: inherit; }
 .done-actions { display: flex; gap: 12px; }
 .done-add {
   height: 48px; padding: 12px; border: none; cursor: pointer; border-radius: 8px;
-  background: var(--mustard-dk); color: var(--ink);
+  background: var(--sage-dk); color: var(--ink);
   display: inline-flex; align-items: center; gap: 10px;
   font-size: 14px; font-weight: 800; text-transform: uppercase;
 }
 .done-share {
   width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
-  background: var(--mustard-dk); display: flex; align-items: center; justify-content: center;
+  background: var(--sage-dk); display: flex; align-items: center; justify-content: center;
 }
 .done-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
 .done-ex { display: flex; flex-direction: column; }
@@ -737,6 +774,7 @@ input, textarea { font-family: inherit; }
 .done-footer {
   position: absolute; left: 0; right: 0; bottom: 0;
   background: var(--cream); padding: 16px 20px 32px;
+  border-top: 2px solid var(--ink); border-radius: 0;
 }
 .done-cta {
   width: 100%; height: 64px; border: none; cursor: pointer; border-radius: 999px;
@@ -747,3 +785,105 @@ input, textarea { font-family: inherit; }
 /* ═══ PLACEHOLDER ════════════════════════════════════════════════════ */
 .cs-screen { background: var(--violet); }
 .cs-copy { padding: 24px 20px; color: var(--white); font-size: 16px; line-height: 1.5; }
+
+/* ═══ ROUND 6 ══════════════════════════════════════════════════════ */
+
+/* ─── home: zero-state hero graphic ─── */
+.start-hero {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 8px 20px 0; min-height: 0;
+}
+.start-hero-img { width: 100%; max-width: 340px; height: auto; display: block; }
+
+/* ─── sheets: pinned head, scrolling body ─── */
+.sheet-pinned {
+  flex-shrink: 0; display: flex; flex-direction: column; gap: 10px;
+  background: var(--cream); padding-bottom: 8px;
+}
+.sheet { max-height: 82vh; }
+.sheet-body { overflow-y: auto; min-height: 0; }
+.swap-sheet .sheet-body { max-height: 46vh; }
+.swap-sheet .swap-head { border-bottom: 1px solid rgba(0,0,0,0.10); padding-bottom: 10px; }
+
+/* ─── compact centred header with a Create button ─── */
+.sel-header {
+  flex-shrink: 0; background: var(--cream);
+  padding: 62px 16px 16px; display: flex; align-items: center; gap: 12px;
+  border-bottom: 2px solid var(--ink);
+}
+.sel-title {
+  flex: 1; text-align: center; color: var(--ink);
+  font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.sel-create {
+  min-width: 84px; height: 48px; padding: 0 16px; border: none; cursor: pointer;
+  border-radius: 1000px; background: var(--violet); color: var(--white);
+  font-size: 16px; font-weight: 500; flex-shrink: 0;
+}
+
+/* ─── CREATE AN EXERCISE (white page, red header) ─── */
+.cfg-screen { background: var(--white); display: flex; flex-direction: column; }
+.cfg-header {
+  flex-shrink: 0; background: var(--white);
+  padding: 62px 16px 16px; display: flex; align-items: center; gap: 12px;
+  border-bottom: 2px solid var(--ink);
+}
+.cfg-back {
+  width: 48px; height: 48px; border-radius: 1000px; border: none; cursor: pointer; padding: 0;
+  background: var(--coral); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cfg-title { font-size: 48px; line-height: 46px; color: var(--coral); }
+.cfg-scroll { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 130px; }
+.cfg-intro { padding: 10px 20px 16px; display: flex; flex-direction: column; gap: 10px; }
+.cfg-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+  text-transform: uppercase; color: #000000;
+}
+.cfg-help {
+  font-family: 'Gabarito', 'Inter', sans-serif;
+  font-size: 14px; line-height: 1.35; color: var(--muted);
+}
+.cfg-name {
+  border: none; background: transparent; outline: none; width: 100%;
+  font-size: 24px; font-weight: 900; color: #000000; letter-spacing: -0.5px;
+  border-left: 2px solid var(--ink); padding-left: 6px;
+}
+.cfg-name::placeholder { color: rgba(0,0,0,0.30); }
+.cfg-divider { height: 2px; background: rgba(0,0,0,0.30); margin: 4px 0 16px; }
+.cfg-section { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+/* Two-up grid used by both muscle and equipment pickers. */
+.cfg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.cfg-muscle {
+  display: flex; align-items: center; gap: 10px; padding: 8px;
+  min-height: 76px; border-radius: 16px; background: var(--cream);
+  border: 2px solid transparent; cursor: pointer; text-align: left;
+}
+.cfg-muscle.on { border-color: var(--coral); }
+.cfg-muscle-name {
+  font-size: 16px; font-weight: 800; color: #000000; overflow-wrap: anywhere;
+}
+.cfg-equip {
+  min-height: 56px; padding: 8px; border-radius: 16px; background: var(--cream);
+  border: 2px solid transparent; cursor: pointer;
+  font-size: 16px; font-weight: 700; color: #000000; text-align: center;
+}
+.cfg-equip.on { border-color: var(--coral); }
+.cfg-btn.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
+
+/* ─── create a plan: empty vs rest vs assigned ─── */
+.cp-day.empty {
+  background: transparent; border: 2px solid var(--ink); color: var(--ink);
+}
+.cp-slot-num.empty {
+  background: var(--white); border: 2px solid var(--ink); color: var(--ink);
+}
+.cp-slot-name.placeholder { color: rgba(0,0,0,0.35); }
+
+/* ─── create-a-workout name row (pencil to refocus) ─── */
+.cw-name-row { display: flex; align-items: center; gap: 8px; }
+.cw-name-row .cw-name-input { flex: 1; min-width: 0; }
+
+/* Selection header sits on cream, so its back button carries the violet. */
+.sel-header .hdr-back.white { background: var(--violet); }
+.sel-header .hdr-back.white svg path { fill: var(--white); }

@@ -1,10 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import './App.css'
 import {
-  MUSCLE_GROUPS, EQUIPMENT_GROUPS, MONTHS_SHORT,
+  MUSCLE_GROUPS, EQUIPMENT_GROUPS, EQUIPMENT, MONTHS_SHORT,
   detailLine, detailLineSoft,
   FEEL_STOPS, feelKnobLabel, feelToRpe, rpeColor, isFailure, buzz,
-  DEFAULT_GOAL_REPS, makeItem,
+  DEFAULT_GOAL_REPS, makeItem, withSlotIds, newSlotId,
   PLAN_MIN_DAYS, PLAN_MAX_DAYS, PLAN_DEFAULT_DAYS,
   planDayIndex, planTodayWorkoutId,
   workoutMuscles, workoutSummaryLine, formatHistoryDate,
@@ -12,6 +12,7 @@ import {
 } from './data.js'
 import { muscleIcon } from './assets/muscleGraphics.js'
 import planBodyArt from './assets/plan-body.svg'
+import homeGraphic from './assets/HomepageGraphic.png'
 import {
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Edit, History, Pause, ArrowRight,
@@ -155,7 +156,10 @@ function SetWidget({ num, isWarmup, lastSet, carryWeight, existing, goalReps, on
   const [reps, setReps] = useState(
     existing ? existing.reps : (goalReps ?? lastSet?.reps ?? DEFAULT_GOAL_REPS))
   const [feel, setFeel] = useState(existing ? (existing.feel ?? null) : null)
-  const adj = (setter, d) => setter(v => parseFloat(Math.max(0, (v ?? 0) + d).toFixed(1)))
+  // Weight can go negative for assisted movements (assisted pull-ups,
+  // assisted dips) where the machine takes load off you. Reps can't.
+  const adjWeight = (d) => setWeight(v => parseFloat(((v ?? 0) + d).toFixed(1)))
+  const adjReps = (d) => setReps(v => Math.max(0, Math.round((v ?? 0) + d)))
 
   return (
     <div className="set-widget">
@@ -165,27 +169,27 @@ function SetWidget({ num, isWarmup, lastSet, carryWeight, existing, goalReps, on
         <div className="sw-group">
           <span className="sw-field-label">WEIGHT</span>
           <div className="sw-row">
-            <StepBtn label="−5" onClick={() => adj(setWeight, -5)} />
-            <StepBtn label="−2.5" small onClick={() => adj(setWeight, -2.5)} />
+            <StepBtn label="−5" onClick={() => adjWeight(-5)} />
+            <StepBtn label="−2.5" small onClick={() => adjWeight(-2.5)} />
             <span className="sw-value">
               <input type="number" inputMode="decimal" value={weight ?? ''}
                 onChange={e => setWeight(e.target.value === '' ? null : parseFloat(e.target.value))} />
               <span className="sw-unit">lbs</span>
             </span>
-            <StepBtn label="+2.5" small onClick={() => adj(setWeight, 2.5)} />
-            <StepBtn label="+5" onClick={() => adj(setWeight, 5)} />
+            <StepBtn label="+2.5" small onClick={() => adjWeight(2.5)} />
+            <StepBtn label="+5" onClick={() => adjWeight(5)} />
           </div>
         </div>
 
         <div className="sw-group">
           <span className="sw-field-label">REPS</span>
           <div className="sw-row reps">
-            <StepBtn label="−1" onClick={() => adj(setReps, -1)} />
+            <StepBtn label="−1" onClick={() => adjReps(-1)} />
             <span className="sw-value reps">
               <input type="number" inputMode="numeric" value={reps ?? ''}
                 onChange={e => setReps(e.target.value === '' ? null : parseInt(e.target.value))} />
             </span>
-            <StepBtn label="+1" onClick={() => adj(setReps, 1)} />
+            <StepBtn label="+1" onClick={() => adjReps(1)} />
           </div>
         </div>
       </div>
@@ -203,12 +207,18 @@ function SetWidget({ num, isWarmup, lastSet, carryWeight, existing, goalReps, on
 }
 
 // ─── sheets ─────────────────────────────────────────────────────────
-function Sheet({ title, titleTone = 'red', children, onClose, footer, className = '' }) {
+function Sheet({ title, titleTone = 'red', children, onClose, footer,
+  className = '', pinned = null }) {
   return (
     <div className="sheet-overlay" onClick={onClose}>
       <div className={`sheet ${className}`} onClick={e => e.stopPropagation()}>
-        <div className="sheet-handle" />
-        {title && <h2 className={`display sheet-title ${titleTone}`}>{title}</h2>}
+        {/* Handle, title and anything in `pinned` stay put; only the
+            body scrolls beneath them. */}
+        <div className="sheet-pinned">
+          <div className="sheet-handle" />
+          {title && <h2 className={`display sheet-title ${titleTone}`}>{title}</h2>}
+          {pinned}
+        </div>
         <div className="sheet-body">{children}</div>
         {footer}
       </div>
@@ -256,14 +266,17 @@ function PauseSheet({ onCancel, onConfirm }) {
 function SwapSheet({ muscle, options, onPick, onCreateNew, onClose }) {
   return (
     <Sheet title="Swap this exercise..." onClose={onClose}
-      footer={<button className="sheet-close" onClick={onClose}>Close</button>}>
-      <div className="swap-head">
-        <MuscleIcon muscle={muscle} size={60} />
-        <span className="swap-head-text">
-          <span className="list-name">{muscle}</span>
-          <span className="list-sub">{options.length} exercise{options.length === 1 ? '' : 's'}</span>
-        </span>
-      </div>
+      className="swap-sheet"
+      footer={<button className="sheet-close" onClick={onClose}>Close</button>}
+      pinned={
+        <div className="swap-head">
+          <MuscleIcon muscle={muscle} size={60} />
+          <span className="swap-head-text">
+            <span className="list-name">{muscle}</span>
+            <span className="list-sub">{options.length} exercise{options.length === 1 ? '' : 's'}</span>
+          </span>
+        </div>
+      }>
       {options.map(ex => (
         <button key={ex.id} className="swap-row" onClick={() => onPick(ex.id)}>
           <span className="swap-row-text">
@@ -627,6 +640,14 @@ function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId,
           <span className="ol-front">OVERLOAD</span>
         </div>
 
+        {/* Nothing scheduled yet — the anatomy graphic fills the space
+            instead of leaving a blank page. */}
+        {!todayWorkout && !plan && (
+          <div className="start-hero">
+            <img className="start-hero-img" src={homeGraphic} alt="" aria-hidden="true" />
+          </div>
+        )}
+
         {todayWorkout && (
           <div className="start-section">
             <p className="section-label">TODAY'S WORKOUT</p>
@@ -676,7 +697,7 @@ function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId,
         ) : (
           <div className="start-cta-stack">
             <button className="start-cta ghost" onClick={onStartWorkout}>
-              Start a Workout <ArrowRight color="#111111" />
+              START A WORKOUT <ArrowRight color="#111111" />
             </button>
             <button className="start-cta solid" onClick={onCreatePlan}>
               CREATE A WORKOUT PLAN <ArrowRight />
@@ -697,20 +718,23 @@ function WorkoutSelection({ workouts, exerciseMap, mode, onPick, onRest, onCreat
   const assigning = mode === 'assign'
   return (
     <div className="sel-screen">
-      <Header title={assigning ? 'Select a Workout' : 'Start a Workout'} onBack={onBack} tone="violet" />
+      {/* Compact header: centred title with Create on the right. */}
+      <div className="sel-header">
+        <button className="hdr-back white" onClick={onBack} aria-label="Back">
+          <SmallChevronLeft color="#6C5CE7" />
+        </button>
+        <span className="sel-title">{assigning ? 'Select a Workout' : 'Start a Workout'}</span>
+        <button className="sel-create" onClick={onCreate}>Create</button>
+      </div>
       <div className="sel-scroll">
-        <div className="sel-quick-row">
-          {assigning && (
+        {assigning && (
+          <div className="sel-quick-row">
             <button className="sel-quick rest" onClick={onRest}>
               <span className="sel-quick-name">Rest Day</span>
               <ChevronRight color="#111111" />
             </button>
-          )}
-          <button className="sel-quick create" onClick={onCreate}>
-            <span className="sel-quick-name">Create a workout</span>
-            <Plus color="#6C5CE7" />
-          </button>
-        </div>
+          </div>
+        )}
 
         {workouts.length > 0 ? (
           <>
@@ -754,9 +778,10 @@ function WorkoutSelection({ workouts, exerciseMap, mode, onPick, onRest, onCreat
 // ════════════════════════════════════════════════════════════════════
 function CreatePlan({ draft, workoutsById, exerciseMap, onChange, onPickDay, onSave, onCancel }) {
   const named = draft.name.trim().length > 0
+  const nameRef = useRef(null)
   const setDays = (n) => {
     const days = Math.min(PLAN_MAX_DAYS, Math.max(PLAN_MIN_DAYS, n))
-    const slots = Array.from({ length: days }, (_, i) => draft.slots[i] ?? null)
+    const slots = Array.from({ length: days }, (_, i) => draft.slots[i])
     onChange({ ...draft, days, slots })
   }
 
@@ -773,9 +798,18 @@ function CreatePlan({ draft, workoutsById, exerciseMap, onChange, onPickDay, onS
 
         <div className="cp-name-block">
           <div className="cp-name-row">
-            <input className="cp-name-input" value={draft.name} placeholder="Add a name..."
-              autoFocus onChange={e => onChange({ ...draft, name: e.target.value })} />
-            {named && <Edit color="#000000" opacity={0.5} />}
+            {/* Only steal focus when there's nothing typed yet. Coming
+                back to this screen with a name already set shouldn't
+                pop the keyboard — tap the pencil for that. */}
+            <input ref={nameRef} className="cp-name-input" value={draft.name}
+              placeholder="Add a name..." autoFocus={!draft.name}
+              onChange={e => onChange({ ...draft, name: e.target.value })} />
+            {named && (
+              <button className="icon-btn" aria-label="Edit plan name"
+                onClick={() => nameRef.current?.focus()}>
+                <Edit color="#000000" opacity={0.5} />
+              </button>
+            )}
           </div>
           {named && <span className="cp-split-line">{draft.days} DAY SPLIT</span>}
         </div>
@@ -786,7 +820,8 @@ function CreatePlan({ draft, workoutsById, exerciseMap, onChange, onPickDay, onS
           <span className="row-label dark">WORKOUT ROTATION</span>
           <div className="cp-days">
             {Array.from({ length: draft.days }, (_, i) => (
-              <span key={i} className={`cp-day ${draft.slots[i] ? 'on' : 'rest'}`}>{i + 1}</span>
+              <span key={i} className={`cp-day ${
+                draft.slots[i] ? 'on' : draft.slots[i] === null ? 'rest' : 'empty'}`}>{i + 1}</span>
             ))}
           </div>
         </div>
@@ -813,9 +848,12 @@ function CreatePlan({ draft, workoutsById, exerciseMap, onChange, onPickDay, onS
               const w = wid ? workoutsById[wid] : null
               return (
                 <button key={i} className="cp-slot" onClick={() => onPickDay(i)}>
-                  <span className={`cp-slot-num ${w ? 'on' : wid === null ? 'rest' : ''}`}>{i + 1}</span>
+                  <span className={`cp-slot-num ${
+                    w ? 'on' : wid === null ? 'rest' : 'empty'}`}>{i + 1}</span>
                   <span className="cp-slot-text">
-                    <span className="cp-slot-name">{w ? w.name : 'Rest'}</span>
+                    <span className={`cp-slot-name ${w || wid === null ? '' : 'placeholder'}`}>
+                      {w ? w.name : wid === null ? 'Rest' : 'Choose a workout'}
+                    </span>
                     {w && <span className="cp-slot-sub">{workoutSummaryLine(w, exerciseMap)}</span>}
                   </span>
                   <SmallChevronRight color="#111111" />
@@ -859,6 +897,7 @@ function Stepper({ label, value, min = 1, max = 60, onChange }) {
 function CreateWorkout({ draft, exerciseMap, editing, onNameChange, onItemsChange,
   onAddExercise, onSave, onCancel }) {
   const named = draft.name.trim().length > 0
+  const nameRef = useRef(null)
   const muscles = workoutMuscles({ items: draft.items }, exerciseMap)
   const patch = (i, p) => onItemsChange(draft.items.map((it, j) => j === i ? { ...it, ...p } : it))
   const removeAt = (i) => onItemsChange(draft.items.filter((_, j) => j !== i))
@@ -869,8 +908,17 @@ function CreateWorkout({ draft, exerciseMap, editing, onNameChange, onItemsChang
       <div className="cw-scroll">
         <div className="cw-section">
           <span className="row-label">WORKOUT NAME</span>
-          <input className="cw-name-input" value={draft.name} placeholder="Add a name..."
-            autoFocus onChange={e => onNameChange(e.target.value)} />
+          <div className="cw-name-row">
+            <input ref={nameRef} className="cw-name-input" value={draft.name}
+              placeholder="Add a name..." autoFocus={!draft.name}
+              onChange={e => onNameChange(e.target.value)} />
+            {draft.name.trim() && (
+              <button className="icon-btn" aria-label="Edit workout name"
+                onClick={() => nameRef.current?.focus()}>
+                <Edit color="#000000" opacity={0.5} />
+              </button>
+            )}
+          </div>
           {draft.items.length > 0 && (
             <span className="cw-summary">
               {draft.items.length} EXERCISE{draft.items.length === 1 ? '' : 'S'}
@@ -1068,40 +1116,50 @@ function ConfigureExercise({ presetMuscle, onSave, onBack }) {
 
   return (
     <div className="cfg-screen">
-      <Header title="Create an Exercise" onBack={onBack} tone="red" />
+      {/* White page, red back button and red League Gothic title. */}
+      <div className="cfg-header">
+        <button className="cfg-back" onClick={onBack} aria-label="Back">
+          <SmallChevronLeft color="#FFFFFF" />
+        </button>
+        <h1 className="display cfg-title">Create an Exercise</h1>
+      </div>
+
       <div className="cfg-scroll">
-        <div className="cfg-section">
-          <span className="row-label on-red">EXERCISE NAME</span>
+        <div className="cfg-intro">
+          <span className="cfg-eyebrow">NEW EXERCISE</span>
+          <p className="cfg-help">
+            Add a name, select the muscle group, and which setup is used for this exercise.
+          </p>
           <input className="cfg-name" value={name} placeholder="Add a name..."
             autoFocus onChange={e => setName(e.target.value)} />
-          {canSave && <span className="cfg-detail">{detailLine(muscle, equipment)}</span>}
         </div>
 
+        <div className="cfg-divider" />
+
         <div className="cfg-section">
-          <span className="row-label on-red">MUSCLE GROUP</span>
-          <div className="chip-row">
+          <span className="cfg-eyebrow">MUSCLE GROUP</span>
+          <div className="cfg-grid">
             {MUSCLE_GROUPS.map(m => (
-              <button key={m} className={`chip ${muscle === m ? 'on' : ''}`}
-                onClick={() => setMuscle(m)}>{m}</button>
+              <button key={m} className={`cfg-muscle ${muscle === m ? 'on' : ''}`}
+                onClick={() => setMuscle(m)}>
+                <MuscleIcon muscle={m} size={60} />
+                <span className="cfg-muscle-name">{m}</span>
+              </button>
             ))}
           </div>
         </div>
 
         <div className="cfg-section">
-          <span className="row-label on-red">EQUIPMENT</span>
-          {EQUIPMENT_GROUPS.map(g => (
-            <div key={g.label} className="cfg-eq-group">
-              <span className="cfg-eq-label">{g.label}</span>
-              <div className="chip-row">
-                {g.items.map(item => (
-                  <button key={item} className={`chip ${equipment === item ? 'on' : ''}`}
-                    onClick={() => setEquipment(item)}>{item}</button>
-                ))}
-              </div>
-            </div>
-          ))}
+          <span className="cfg-eyebrow">EQUIPMENT</span>
+          <div className="cfg-grid">
+            {EQUIPMENT.map(item => (
+              <button key={item} className={`cfg-equip ${equipment === item ? 'on' : ''}`}
+                onClick={() => setEquipment(item)}>{item}</button>
+            ))}
+          </div>
         </div>
       </div>
+
       <div className="cfg-footer">
         <button className="cfg-btn ghost" onClick={onBack}>Cancel</button>
         <button className="cfg-btn solid" disabled={!canSave}
@@ -1115,12 +1173,16 @@ function ConfigureExercise({ presetMuscle, onSave, onBack }) {
 //  WORKOUT COMPLETE
 // ════════════════════════════════════════════════════════════════════
 function WorkoutComplete({ items, exerciseMap, loggedSets, onAddMore, onDone }) {
-  const worked = items.map(it => exerciseMap[it.exId]).filter(Boolean)
-    .filter(ex => (loggedSets[ex.id] || []).length > 0)
+  // One entry per SLOT, not per exercise — if you benched at the start
+  // and quick-added more bench at the end, those are two sections with
+  // their own sets, not one merged pile.
+  const worked = items
+    .map(it => ({ slotId: it.slotId, ex: exerciseMap[it.exId], sets: loggedSets[it.slotId] || [] }))
+    .filter(w => w.ex && w.sets.length > 0)
   const totalSets = worked.reduce(
-    (a, ex) => a + (loggedSets[ex.id] || []).filter(s => !s.isWarmup).length, 0)
+    (a, w) => a + w.sets.filter(s => !s.isWarmup).length, 0)
   const failures = worked.reduce(
-    (a, ex) => a + (loggedSets[ex.id] || []).filter(s => isFailure(s.rpe)).length, 0)
+    (a, w) => a + w.sets.filter(s => isFailure(s.rpe)).length, 0)
   const summaryLine = [
     `${worked.length} exercise${worked.length === 1 ? '' : 's'}`,
     `${totalSets} set${totalSets === 1 ? '' : 's'}`,
@@ -1129,10 +1191,10 @@ function WorkoutComplete({ items, exerciseMap, loggedSets, onAddMore, onDone }) 
 
   const onShare = async () => {
     const lines = ['OVERLOAD — Workout Complete', summaryLine, '']
-    for (const ex of worked) {
-      lines.push(ex.name.toUpperCase())
+    for (const w of worked) {
+      lines.push(w.ex.name.toUpperCase())
       let n = 0
-      for (const s of loggedSets[ex.id] || []) {
+      for (const s of w.sets) {
         const tag = s.isWarmup ? 'W' : (isFailure(s.rpe) ? 'Failure' : `RPE ${s.rpe ?? '—'}`)
         const label = s.isWarmup ? 'Warmup' : `Set ${++n}`
         lines.push(`  ${label}: ${s.weight != null ? `${s.weight} lbs` : 'BW'} × ${s.reps ?? '—'} reps  (${tag})`)
@@ -1164,13 +1226,13 @@ function WorkoutComplete({ items, exerciseMap, loggedSets, onAddMore, onDone }) 
           </div>
         </div>
         <div className="done-list">
-          {worked.map(ex => (
-            <div key={ex.id} className="done-ex">
+          {worked.map(w => (
+            <div key={w.slotId} className="done-ex">
               <div className="done-ex-head">
-                <span className="done-ex-name">{ex.name}</span>
-                <span className="done-ex-sub">{detailLine(ex.muscle, ex.equipment)}</span>
+                <span className="done-ex-name">{w.ex.name}</span>
+                <span className="done-ex-sub">{detailLine(w.ex.muscle, w.ex.equipment)}</span>
               </div>
-              <SetGroup sets={loggedSets[ex.id] || []} />
+              <SetGroup sets={w.sets} />
             </div>
           ))}
         </div>
@@ -1232,7 +1294,7 @@ export default function App() {
   const [comingSoon, setComingSoon] = useState(null)
 
   const activeWorkout = activeWorkoutId ? workoutsById[activeWorkoutId] : null
-  const doneFlags = sessionItems.map(it => (loggedSets[it.exId] || []).some(s => !s.isWarmup))
+  const doneFlags = sessionItems.map(it => (loggedSets[it.slotId] || []).some(s => !s.isWarmup))
 
   // ── workout creation / editing ──
   const startCreate = () => {
@@ -1275,7 +1337,8 @@ export default function App() {
   const startCreatePlan = () => {
     setPlanDraft({
       id: uid(), name: '', days: PLAN_DEFAULT_DAYS,
-      slots: Array(PLAN_DEFAULT_DAYS).fill(null),
+      // undefined = not chosen yet (empty), null = explicit Rest day.
+      slots: Array(PLAN_DEFAULT_DAYS).fill(undefined),
     })
     setScreen('createPlan')
   }
@@ -1303,7 +1366,7 @@ export default function App() {
     if (pickerMode === 'draft') {
       setDraft(d => ({ ...d, items: [...d.items, makeItem(exId)] })); setScreen('createWorkout')
     } else if (pickerMode === 'plan') {
-      setSessionItems(prev => [...prev, makeItem(exId)]); setScreen('plan')
+      setSessionItems(prev => [...prev, { ...makeItem(exId), slotId: newSlotId() }]); setScreen('plan')
     } else if (pickerMode === 'quickAdd') {
       setQuickAddIds(prev => [...prev, exId]); setScreen('quickAdd')
     } else if (pickerMode === 'swap') {
@@ -1322,7 +1385,7 @@ export default function App() {
     const w = workoutsById[wid]
     if (!w) return
     setActiveWorkoutId(wid)
-    setSessionItems(w.items.map(it => ({ ...it })))
+    setSessionItems(withSlotIds(w.items.map(it => ({ ...it }))))
     setExIdx(0); setLoggedSets({}); setScreen('plan')
   }
   const resumeWorkout = () => {
@@ -1336,16 +1399,16 @@ export default function App() {
   const addSet = (s) => {
     const it = sessionItems[exIdx]
     if (!it) return
-    setLoggedSets(prev => ({ ...prev, [it.exId]: [...(prev[it.exId] || []), s] }))
+    setLoggedSets(prev => ({ ...prev, [it.slotId]: [...(prev[it.slotId] || []), s] }))
   }
   const editSet = (index, patch) => {
     const it = sessionItems[exIdx]
     if (!it) return
     setLoggedSets(prev => {
-      const arr = [...(prev[it.exId] || [])]
+      const arr = [...(prev[it.slotId] || [])]
       if (!arr[index]) return prev
       arr[index] = { ...arr[index], ...patch }
-      return { ...prev, [it.exId]: arr }
+      return { ...prev, [it.slotId]: arr }
     })
   }
   const nextExercise = () => {
@@ -1368,9 +1431,12 @@ export default function App() {
     const date = new Date().toISOString()
     setHistory(prev => {
       const next = { ...prev }
-      for (const [exId, sets] of Object.entries(loggedSets)) {
+      // History stays keyed by EXERCISE (that's how you look it up
+      // later), so map each session slot back to its exercise.
+      for (const it of sessionItems) {
+        const sets = loggedSets[it.slotId]
         if (!sets || sets.length === 0) continue
-        next[exId] = [...(next[exId] || []), { date, sets }]
+        next[it.exId] = [...(next[it.exId] || []), { date, sets }]
       }
       return next
     })
@@ -1379,7 +1445,7 @@ export default function App() {
   const commitQuickAdd = () => {
     if (quickAddIds.length === 0) return
     const firstNew = sessionItems.length
-    setSessionItems(prev => [...prev, ...quickAddIds.map(id => makeItem(id))])
+    setSessionItems(prev => [...prev, ...quickAddIds.map(id => ({ ...makeItem(id), slotId: newSlotId() }))])
     setQuickAddIds([]); setExIdx(firstNew); setScreen('logging')
   }
 
@@ -1492,7 +1558,7 @@ export default function App() {
     return (
       <LoggingScreen key={ex.id}
         exercise={ex} exIdx={exIdx} items={sessionItems}
-        sets={loggedSets[ex.id] || []} doneFlags={doneFlags}
+        sets={loggedSets[it.slotId] || []} doneFlags={doneFlags}
         goalReps={it.reps} lastTime={lastSessionSets(history, ex.id)}
         isLastRemaining={remainingAfterThis === 0}
         swapOptions={exercises.filter(e => e.muscle === ex.muscle && e.id !== ex.id)}
