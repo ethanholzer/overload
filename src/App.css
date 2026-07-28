@@ -330,7 +330,7 @@ input, textarea { font-family: inherit; }
 /* ═══ ADD EXERCISE ═══════════════════════════════════════════════════ */
 .ce-screen { background: var(--white); display: flex; flex-direction: column; }
 .ce-header {
-  flex-shrink: 0; background: var(--white); padding: 62px 16px 16px;
+  flex-shrink: 0; background: var(--cream); padding: 62px 16px 16px;
   border-bottom: 2px solid var(--ink);
   display: flex; align-items: center; gap: 16px;
 }
@@ -499,40 +499,56 @@ input, textarea { font-family: inherit; }
 /* ═══ LOGGING ════════════════════════════════════════════════════════
    Progress tracker fixed at the top; only the dark area scrolls. */
 .log-screen { display: flex; flex-direction: column; background: var(--cream); }
+/* White tracker with a hard bottom edge; only the exercise card inside
+   carries colour (a red left spine). */
 .log-progress {
-  flex-shrink: 0; background: var(--coral);
-  padding: 72px 16px 20px; display: flex; flex-direction: column; gap: 12px;
+  flex-shrink: 0; background: var(--white);
+  padding: 64px 16px 20px; display: flex; flex-direction: column; gap: 16px;
   border-bottom: 2px solid var(--ink);
+}
+.log-ex-card {
+  background: #EBEBEB; border-left: 8px solid var(--coral);
+  padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 16px;
 }
 .log-title-block { display: flex; flex-direction: column; gap: 2px; }
 .log-exercise-name {
-  font-size: 32px; font-weight: 700; line-height: 39px;
-  color: var(--white); overflow-wrap: anywhere;
+  font-size: 32px; font-weight: 800; line-height: 39px;
+  color: var(--ink); overflow-wrap: anywhere;
 }
 .log-detail-line {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: rgba(255,255,255,0.75);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: var(--coral);
 }
-.log-tools { display: flex; gap: 12px; }
+.log-ex-tools { display: flex; gap: 12px; }
+/* Card buttons (Swap, History): white circles with dark icons. */
 .log-btn {
-  width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
-  background: var(--coral-dk); display: flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px; border-radius: 999px; cursor: pointer; padding: 0;
+  background: var(--white); border: 2px solid transparent;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.5s ease-out;
 }
 .log-pips { display: flex; gap: 8px; height: 6px; }
 .log-pip { height: 6px; flex: 1; border-radius: 999px; }
-.log-pip.done    { background: var(--white); }
-.log-pip.current { background: #000000; }
+.log-pip.current { background: var(--coral); }
+.log-pip.done    { background: #B2B2B2; }
 .log-pip.pending { background: rgba(0,0,0,0.3); }
-.log-nav { display: flex; align-items: center; justify-content: space-between; }
-.log-exercise-count { font-size: 13px; font-weight: 500; color: var(--white); }
+.log-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.log-exercise-count { font-size: 13px; font-weight: 500; color: var(--ink); flex-shrink: 0; }
 .log-nav-btns { display: flex; gap: 12px; }
+/* Nav buttons (prev / pause / next / overview): grey circles, dark icons. */
 .log-round {
-  width: 48px; height: 48px; border-radius: 999px; border: none; cursor: pointer; padding: 0;
-  background: var(--coral-dk); display: flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px; border-radius: 999px; cursor: pointer; padding: 0;
+  background: #EBEBEB; border: 2px solid transparent;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.5s ease-out;
 }
 .log-round:disabled { opacity: 0.35; cursor: not-allowed; }
+/* Tap feedback: a coral outline snaps on, then fades over ~0.5s. The
+   snap-on is instant (no transition), the fade-out eases via the base
+   rule's transition. */
+.log-btn.flash, .log-round.flash {
+  border-color: var(--coral); transition: none;
+}
 
-/* Only the progress tracker at the top stays red; the working area
-   below it is the neutral cream. */
 .log-body {
   flex: 1; min-height: 0; overflow-y: auto;
   background: var(--cream); padding: 16px 16px 112px;
@@ -672,8 +688,8 @@ input, textarea { font-family: inherit; }
 .sw-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .sw-row.reps { gap: 20px; }
 .sw-step {
-  width: 48px; height: 48px; flex-shrink: 0; border-radius: 14px; border: none; cursor: pointer;
-  background: var(--cream); color: var(--step-txt); font-size: 15px; font-weight: 700;
+  width: 48px; height: 48px; flex-shrink: 0; border-radius: 999px; border: none; cursor: pointer;
+  background: #EBEBEB; color: #666666; font-size: 15px; font-weight: 700;
 }
 .sw-step.small { font-size: 13px; }
 .sw-value {
@@ -887,3 +903,74 @@ input, textarea { font-family: inherit; }
 /* Selection header sits on cream, so its back button carries the violet. */
 .sel-header .hdr-back.white { background: var(--violet); }
 .sel-header .hdr-back.white svg path { fill: var(--white); }
+
+/* ═══ LOGBOOKS ═════════════════════════════════════════════════════ */
+
+/* Home: Workouts / Exercises entry buttons under the wordmark. */
+.logbook-row { display: flex; gap: 12px; margin-top: 4px; }
+.logbook-btn {
+  flex: 1; height: 48px; border-radius: 8px; border: none; cursor: pointer;
+  background: var(--white); color: var(--ink);
+  font-size: 14px; font-weight: 800; font-family: 'Inter', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+
+/* Workouts logbook — chronological timeline. */
+.log-book-screen { display: flex; flex-direction: column; background: var(--cream); height: 100%; }
+.log-book-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 40px; }
+.log-book-empty {
+  font-family: 'Gabarito', 'Inter', sans-serif;
+  color: var(--muted); font-size: 15px; line-height: 1.4; padding: 24px 4px;
+}
+.timeline-row {
+  width: 100%; background: none; border: none; cursor: pointer; text-align: left;
+  display: flex; align-items: stretch; gap: 14px; padding: 0;
+}
+.timeline-rail { position: relative; width: 16px; flex-shrink: 0; display: flex; justify-content: center; }
+.timeline-dot {
+  width: 14px; height: 14px; border-radius: 999px; background: var(--violet);
+  margin-top: 20px; flex-shrink: 0; z-index: 1;
+}
+.timeline-line {
+  position: absolute; top: 34px; bottom: -6px; width: 2px; background: var(--cream-dk);
+}
+.timeline-body {
+  flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 14px 0 18px;
+}
+.timeline-date { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--muted); text-transform: uppercase; }
+.timeline-name { font-size: 20px; font-weight: 800; color: var(--ink); }
+.timeline-meta { font-size: 13px; color: var(--muted); }
+.timeline-row > svg { align-self: center; flex-shrink: 0; }
+
+/* Workout-log detail reuses the sage complete screen. */
+.logdetail-date { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: var(--ink); opacity: 0.6; text-transform: uppercase; margin-bottom: 2px; }
+
+/* Exercises logbook reuses the picker's group/rows. */
+.ce-group-head {
+  display: flex; align-items: center; gap: 12px; padding: 20px 20px 8px;
+}
+.ce-group-head .list-name { font-size: 16px; font-weight: 800; color: var(--ink); }
+.ce-header-spacer { min-width: 48px; }
+
+/* ═══ EXERCISE SEARCH — movement rows + variations modal ═══════════ */
+
+/* QuestionMark badge on movement / variation rows. */
+.ex-row-badge {
+  width: 40px; height: 40px; border-radius: 999px; background: #DBDBDB;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* Variations modal: red League Gothic title, movement name pinned. */
+.variations-sheet .sheet-title { font-size: 40px; }
+.variations-movement {
+  font-size: 32px; font-weight: 800; color: var(--ink); padding: 0 4px 4px;
+  overflow-wrap: anywhere;
+}
+.variations-sheet .sheet-body { max-height: 46vh; }
+.variation-row {
+  width: 100%; min-height: 68px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  background: #EBEBEB; border: none; border-bottom: 2px solid var(--white);
+  cursor: pointer; text-align: left;
+}
+.variation-row:active { filter: brightness(0.96); }

@@ -9,6 +9,7 @@ import {
   planDayIndex, planTodayWorkoutId,
   workoutMuscles, workoutSummaryLine, formatHistoryDate,
   loadState, saveState, freshState, lastSessionSets, exerciseSessions,
+  groupMovements, variationSetCount, recordCompletedWorkout, movementKey,
 } from './data.js'
 import { muscleIcon } from './assets/muscleGraphics.js'
 import planBodyArt from './assets/plan-body.svg'
@@ -18,7 +19,7 @@ import {
   Plus, Edit, History, Pause, ArrowRight,
   SmallChevronLeft, SmallChevronRight, SmallChevronUp, SmallChevronDown,
   Share, Close, KebabMenu, Trash, Swap, List, Search, Check,
-  AddExercise, Book, Gear,
+  AddExercise, Book, Gear, Dumbbell, QuestionMark,
 } from './icons.jsx'
 
 const uid = () => Math.random().toString(36).slice(2, 9)
@@ -407,26 +408,36 @@ function LoggingScreen({
 
   const anySheet = sheet || pausing || showSwap
 
+  // A control that flashes a coral outline for ~0.5s on tap, then fades.
+  const FlashBtn = ({ className, onClick, disabled, 'aria-label': label, children }) => {
+    const [flash, setFlash] = useState(false)
+    return (
+      <button className={`${className} ${flash ? 'flash' : ''}`} disabled={disabled}
+        aria-label={label}
+        onClick={() => { setFlash(true); setTimeout(() => setFlash(false), 500); onClick?.() }}>
+        {children}
+      </button>
+    )
+  }
+
   return (
     <div className="log-screen">
+      {/* White tracker with a hard bottom edge. The exercise sits ABOVE
+          the progress bar so it's the first thing you see. */}
       <div className="log-progress">
-        <div className="log-title-block">
-          <h2 className="log-exercise-name">{exercise.name}</h2>
-          <span className="log-detail-line">{detailLine(exercise.muscle, exercise.equipment)}</span>
-        </div>
-
-        {/* Details is gone — swap, history, and today's plan are the
-            only things you reach for mid-set. */}
-        <div className="log-tools">
-          <button className="log-btn" onClick={() => setShowSwap(true)} aria-label="Swap exercise">
-            <Swap color="#FFFFFF" />
-          </button>
-          <button className="log-btn" onClick={onHistory} aria-label="Exercise history">
-            <History color="#FFFFFF" />
-          </button>
-          <button className="log-btn" onClick={onPlan} aria-label="Today's plan">
-            <List color="#FFFFFF" />
-          </button>
+        <div className="log-ex-card">
+          <div className="log-title-block">
+            <h2 className="log-exercise-name">{exercise.name}</h2>
+            <span className="log-detail-line">{detailLine(exercise.muscle, exercise.equipment)}</span>
+          </div>
+          <div className="log-ex-tools">
+            <FlashBtn className="log-btn" onClick={() => setShowSwap(true)} aria-label="Swap exercise">
+              <Swap color="#111111" />
+            </FlashBtn>
+            <FlashBtn className="log-btn" onClick={onHistory} aria-label="Exercise history">
+              <History color="#111111" />
+            </FlashBtn>
+          </div>
         </div>
 
         <div className="log-pips">
@@ -439,17 +450,20 @@ function LoggingScreen({
         <div className="log-nav">
           <span className="log-exercise-count">Exercise {exIdx + 1} of {items.length}</span>
           <div className="log-nav-btns">
-            <button className="log-round" onClick={() => onGo(exIdx - 1)}
+            <FlashBtn className="log-round" onClick={() => onGo(exIdx - 1)}
               disabled={exIdx === 0} aria-label="Previous exercise">
-              <SmallChevronLeft color="#FFFFFF" />
-            </button>
-            <button className="log-round" onClick={() => setPausing(true)} aria-label="Pause workout">
-              <Pause color="#FFFFFF" />
-            </button>
-            <button className="log-round" onClick={() => onGo(exIdx + 1)}
+              <SmallChevronLeft color="#111111" />
+            </FlashBtn>
+            <FlashBtn className="log-round" onClick={() => setPausing(true)} aria-label="Pause workout">
+              <Pause color="#111111" />
+            </FlashBtn>
+            <FlashBtn className="log-round" onClick={() => onGo(exIdx + 1)}
               disabled={exIdx === items.length - 1} aria-label="Next exercise">
-              <SmallChevronRight color="#FFFFFF" />
-            </button>
+              <SmallChevronRight color="#111111" />
+            </FlashBtn>
+            <FlashBtn className="log-round" onClick={onPlan} aria-label="Workout overview">
+              <List color="#111111" />
+            </FlashBtn>
           </div>
         </div>
       </div>
@@ -459,7 +473,7 @@ function LoggingScreen({
         <div className="log-buttons">
           <button className="ss-btn outline"
             onClick={() => setSheet({ mode: 'add', isWarmup: true, setNum: 0 })}>
-            Warmup Set <Plus color="#FFFFFF" />
+            Warmup Set <Plus color="#111111" />
           </button>
           <button className="ss-btn solid"
             onClick={() => setSheet({ mode: 'add', isWarmup: false, setNum: workingCount + 1 })}>
@@ -524,6 +538,153 @@ function ExerciseHistory({ exercise, sessions, onBack }) {
     </div>
   )
 }
+
+// ════════════════════════════════════════════════════════════════════
+//  WORKOUTS LOGBOOK — chronological timeline of completed workouts
+// ════════════════════════════════════════════════════════════════════
+function WorkoutLogbook({ log, onOpen, onBack }) {
+  return (
+    <div className="log-book-screen">
+      <Header title="Workouts" onBack={onBack} tone="violet" />
+      <div className="log-book-scroll">
+        {log.length === 0 && (
+          <p className="log-book-empty">
+            No completed workouts yet. Finish a workout and it'll show up here as a timeline.
+          </p>
+        )}
+        {log.map((entry, i) => {
+          const setCount = entry.exercises.reduce(
+            (n, e) => n + e.sets.filter(s => !s.isWarmup).length, 0)
+          return (
+            <button key={entry.id || i} className="timeline-row" onClick={() => onOpen(entry)}>
+              <span className="timeline-rail">
+                <span className="timeline-dot" />
+                {i < log.length - 1 && <span className="timeline-line" />}
+              </span>
+              <span className="timeline-body">
+                <span className="timeline-date">{formatHistoryDate(entry.date)}</span>
+                <span className="timeline-name">{entry.name}</span>
+                <span className="timeline-meta">
+                  {entry.exercises.length} exercise{entry.exercises.length === 1 ? '' : 's'} · {setCount} set{setCount === 1 ? '' : 's'}
+                </span>
+              </span>
+              <SmallChevronRight color="#111111" />
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// A single completed workout, set by set — shareable, no editing.
+function WorkoutLogDetail({ entry, onBack }) {
+  const onShare = async () => {
+    const lines = ['OVERLOAD — ' + entry.name, formatHistoryDate(entry.date), '']
+    for (const e of entry.exercises) {
+      lines.push(e.name.toUpperCase())
+      let n = 0
+      for (const s of e.sets) {
+        const label = s.isWarmup ? 'Warmup' : `Set ${++n}`
+        const tag = s.isWarmup ? '' : isFailure(s.rpe) ? '  (Failure)' : s.rpe != null ? `  (RPE ${s.rpe})` : ''
+        lines.push(`  ${label}: ${s.weight != null ? `${s.weight} lbs` : 'BW'} × ${s.reps ?? '—'} reps${tag}`)
+      }
+      lines.push('')
+    }
+    const text = lines.join('\n').trim()
+    try {
+      if (navigator.share) await navigator.share({ title: 'Overload — ' + entry.name, text })
+      else if (navigator.clipboard) await navigator.clipboard.writeText(text)
+    } catch { /* dismissed */ }
+  }
+  return (
+    <div className="done-screen logdetail">
+      <div className="done-scroll">
+        <div className="done-head">
+          <div className="done-head-text">
+            <p className="logdetail-date">{formatHistoryDate(entry.date)}</p>
+            <h1 className="display done-title">{entry.name}</h1>
+          </div>
+          <div className="done-actions">
+            <button className="done-share" onClick={onShare} aria-label="Share workout">
+              <Share color="#111111" />
+            </button>
+          </div>
+        </div>
+        <div className="done-list">
+          {entry.exercises.map((e, i) => (
+            <div key={i} className="done-ex">
+              <div className="done-ex-head">
+                <span className="done-ex-name">{e.name}</span>
+                <span className="done-ex-sub">{detailLine(e.muscle, e.equipment)}</span>
+              </div>
+              <SetGroup sets={e.sets} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="done-footer">
+        <button className="done-cta" onClick={onBack}>Back to Logbook</button>
+      </div>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  EXERCISES LOGBOOK — the exercise library grouped by movement
+// ════════════════════════════════════════════════════════════════════
+function ExerciseLogbook({ exercises, history, onOpenExercise, onBack }) {
+  const [q, setQ] = useState('')
+  const query = q.trim().toLowerCase()
+  const byMuscle = useMemo(() => {
+    const m = {}
+    for (const mg of MUSCLE_GROUPS) m[mg] = []
+    for (const ex of exercises) (m[ex.muscle] ||= []).push(ex)
+    return m
+  }, [exercises])
+
+  return (
+    <div className="ce-screen">
+      <div className="ce-header">
+        <button className="hdr-back white" onClick={onBack} aria-label="Back">
+          <SmallChevronLeft color="#FFFFFF" />
+        </button>
+        <span className="ce-title">Exercises</span>
+        <span className="ce-header-spacer" />
+      </div>
+      <div className="ce-searchbar">
+        <div className="ce-search">
+          <Search color="#737373" size={20} />
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search" />
+        </div>
+      </div>
+      <div className="ce-scroll">
+        {MUSCLE_GROUPS.filter(mg => byMuscle[mg]?.length).map(mg => {
+          const list = byMuscle[mg].filter(ex => !query || ex.name.toLowerCase().includes(query))
+          if (!list.length) return null
+          return (
+            <div key={mg}>
+              <div className="ce-group-head"><MuscleIcon muscle={mg} size={40} /><span className="list-name">{mg}</span></div>
+              {list.map(ex => {
+                const sets = variationSetCount(history, ex.id)
+                return (
+                  <button key={ex.id} className="ex-row" onClick={() => onOpenExercise(ex.id)}>
+                    <span className="ex-row-text">
+                      <span className="ex-row-name">{ex.name}</span>
+                      <span className="ex-row-sub">{detailLineSoft(ex.muscle, ex.equipment)} · {sets} set{sets === 1 ? '' : 's'}</span>
+                    </span>
+                    <SmallChevronRight color="#111111" />
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 
 // ════════════════════════════════════════════════════════════════════
 //  TODAY'S PLAN — session-only edits
@@ -613,7 +774,7 @@ function TodaysPlan({ workoutName, items, exerciseMap, onGo, onBack, onChange, o
 // ════════════════════════════════════════════════════════════════════
 function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId,
   onStartWorkout, onCreatePlan, onStartToday, onResume, onHistory,
-  onPlanOptions, onWorkbook, onSettings }) {
+  onPlanOptions, onWorkbook, onExercises, onSettings }) {
   const todayWorkoutId = planTodayWorkoutId(plan)
   const todayWorkout = todayWorkoutId ? workoutsById[todayWorkoutId] : null
   const isPausedToday = todayWorkout && pausedWorkoutId === todayWorkoutId
@@ -638,6 +799,17 @@ function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId,
         <div className="overload-stack">
           <span className="ol-back"> OVERLOAD</span>
           <span className="ol-front">OVERLOAD</span>
+        </div>
+
+        {/* Logbook entry points — review saved workouts/exercises and
+            their history. */}
+        <div className="logbook-row">
+          <button className="logbook-btn" onClick={onWorkbook}>
+            <Book color="#111111" /> Workouts
+          </button>
+          <button className="logbook-btn" onClick={onExercises}>
+            <Dumbbell color="#111111" /> Exercises
+          </button>
         </div>
 
         {/* Nothing scheduled yet — the anatomy graphic fills the space
@@ -971,31 +1143,26 @@ function CreateWorkout({ draft, exerciseMap, editing, onNameChange, onItemsChang
 // ════════════════════════════════════════════════════════════════════
 //  ADD EXERCISE — search + muscle/equipment filters
 // ════════════════════════════════════════════════════════════════════
-function ChooseExercise({ exercises, title = 'Add Exercise', onPick, onCreateNew, onBack }) {
+function ChooseExercise({ exercises, history = {}, title = 'Add Exercise', onPick, onCreateNew, onBack }) {
   const [q, setQ] = useState('')
   const [expanded, setExpanded] = useState({})
   const [muscleFilter, setMuscleFilter] = useState([])
-  const [equipFilter, setEquipFilter] = useState([])
-  const [sheet, setSheet] = useState(null)          // 'muscle' | 'equipment'
-  // Filters inside the sheet are live-previewed, then committed on apply.
+  const [sheet, setSheet] = useState(null)          // 'muscle'
   const [draftMuscle, setDraftMuscle] = useState([])
-  const [draftEquip, setDraftEquip] = useState([])
+  const [openMovement, setOpenMovement] = useState(null)   // variations modal
 
   const query = q.trim().toLowerCase()
-  const filtering = muscleFilter.length > 0 || equipFilter.length > 0
+  const filtering = muscleFilter.length > 0
 
-  const matches = (list, mFil, eFil) => list.filter(e =>
+  const matches = (list, mFil) => list.filter(e =>
     (mFil.length === 0 || mFil.includes(e.muscle)) &&
-    (eFil.length === 0 || eFil.includes(e.equipment)) &&
-    (!query || e.name.toLowerCase().includes(query) ||
-      e.muscle.toLowerCase().includes(query) || e.equipment.toLowerCase().includes(query)))
+    (!query || e.name.toLowerCase().includes(query) || e.muscle.toLowerCase().includes(query)))
 
-  const visible = useMemo(() => matches(exercises, muscleFilter, equipFilter),
-    [exercises, muscleFilter, equipFilter, query])
-  const previewCount = sheet === 'muscle'
-    ? matches(exercises, draftMuscle, equipFilter).length
-    : matches(exercises, muscleFilter, draftEquip).length
+  const visible = useMemo(() => matches(exercises, muscleFilter),
+    [exercises, muscleFilter, query])
+  const previewCount = matches(exercises, draftMuscle).length
 
+  // Group visible exercises by muscle, then by movement within each.
   const byMuscle = useMemo(() => {
     const m = {}
     for (const ex of visible) (m[ex.muscle] ||= []).push(ex)
@@ -1003,30 +1170,34 @@ function ChooseExercise({ exercises, title = 'Add Exercise', onPick, onCreateNew
   }, [visible])
   const groupsPresent = MUSCLE_GROUPS.filter(m => byMuscle[m])
   const toggle = (m) => setExpanded(e => ({ ...e, [m]: !e[m] }))
-  // A search or an active filter has already narrowed things down, so
-  // showing the results collapsed would just add a tap.
   const forceOpen = !!query || filtering
 
-  const openSheet = (which) => {
-    setDraftMuscle(muscleFilter); setDraftEquip(equipFilter); setSheet(which)
-  }
+  const openSheet = () => { setDraftMuscle(muscleFilter); setSheet('muscle') }
   const toggleIn = (arr, v) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
 
-  const Row = ({ ex }) => (
-    <button className="ex-row" onClick={() => onPick(ex.id)}>
-      <span className="ex-row-text">
-        <span className="ex-row-name">{ex.name}</span>
-        <span className="ex-row-sub">{detailLineSoft(ex.muscle, ex.equipment)}</span>
-      </span>
-      <AddExercise color="#111111" />
-    </button>
-  )
+  // One row per MOVEMENT. Secondary text is the variation count; tapping
+  // opens the equipment-variations modal instead of picking directly.
+  const MovementRow = ({ movement }) => {
+    const n = movement.variations.length
+    const single = n === 1
+    return (
+      <button className="ex-row" onClick={() => single ? onPick(movement.variations[0].id) : setOpenMovement(movement)}>
+        <span className="ex-row-badge"><QuestionMark color="#111111" /></span>
+        <span className="ex-row-text">
+          <span className="ex-row-name">{movement.name}</span>
+          <span className="ex-row-sub">{single ? 'Primary Exercise' : `${n} variations`}</span>
+        </span>
+        <SmallChevronRight color="#111111" />
+      </button>
+    )
+  }
 
   return (
     <div className="ce-screen">
+      {/* Cream header, coral round back + Create, centred title. */}
       <div className="ce-header">
         <button className="hdr-back white" onClick={onBack} aria-label="Back">
-          <ChevronLeft color="#F0573F" />
+          <SmallChevronLeft color="#FFFFFF" />
         </button>
         <span className="ce-title">{title}</span>
         <button className="ce-create" onClick={() => onCreateNew(null)}>Create</button>
@@ -1037,16 +1208,12 @@ function ChooseExercise({ exercises, title = 'Add Exercise', onPick, onCreateNew
           <Search color="#737373" size={20} />
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search" />
         </div>
+        {/* Muscle filter spans the whole row; equipment filtering is gone. */}
         <div className="ce-filters">
-          <button className={`ce-filter ${muscleFilter.length ? 'on' : ''}`}
-            onClick={() => muscleFilter.length ? setMuscleFilter([]) : openSheet('muscle')}>
+          <button className={`ce-filter wide ${muscleFilter.length ? 'on' : ''}`}
+            onClick={() => muscleFilter.length ? setMuscleFilter([]) : openSheet()}>
             {muscleFilter.length ? `Muscles (${muscleFilter.length})` : 'All Muscles'}
             {muscleFilter.length ? <Close color="#FFFFFF" /> : <SmallChevronDown color="#111111" />}
-          </button>
-          <button className={`ce-filter ${equipFilter.length ? 'on' : ''}`}
-            onClick={() => equipFilter.length ? setEquipFilter([]) : openSheet('equipment')}>
-            {equipFilter.length ? `Equipment (${equipFilter.length})` : 'All equipment'}
-            {equipFilter.length ? <Close color="#FFFFFF" /> : <SmallChevronDown color="#111111" />}
           </button>
         </div>
       </div>
@@ -1061,7 +1228,7 @@ function ChooseExercise({ exercises, title = 'Add Exercise', onPick, onCreateNew
           <p className="ce-empty">Nothing matches those filters. Tap Create to add a new exercise.</p>
         )}
         {groupsPresent.map(muscle => {
-          const list = byMuscle[muscle]
+          const movements = groupMovements(byMuscle[muscle])
           const isOpen = forceOpen || !!expanded[muscle]
           return (
             <div key={muscle}>
@@ -1069,15 +1236,13 @@ function ChooseExercise({ exercises, title = 'Add Exercise', onPick, onCreateNew
                 <MuscleIcon muscle={muscle} size={60} />
                 <span className="ce-group-text">
                   <span className="list-name">{muscle}</span>
-                  <span className="list-sub">{list.length} exercise{list.length === 1 ? '' : 's'}</span>
+                  <span className="list-sub">{byMuscle[muscle].length} exercise{byMuscle[muscle].length === 1 ? '' : 's'}</span>
                 </span>
                 {isOpen ? <ChevronUp color="#111111" /> : <ChevronDown color="#111111" />}
               </button>
               {isOpen && (
                 <>
-                  {list.map(ex => <Row key={ex.id} ex={ex} />)}
-                  {/* Create straight into this group — the muscle is
-                      already known, so it's pre-filled. */}
+                  {movements.map(mv => <MovementRow key={mv.key} movement={mv} />)}
                   <button className="ex-add-row" onClick={() => onCreateNew(muscle)}>
                     <span className="ex-add-text">Add a new {muscle.toLowerCase()} exercise...</span>
                     <Plus color="#111111" />
@@ -1096,14 +1261,42 @@ function ChooseExercise({ exercises, title = 'Add Exercise', onPick, onCreateNew
           onApply={() => { setMuscleFilter(draftMuscle); setSheet(null) }}
           onClose={() => setSheet(null)} />
       )}
-      {sheet === 'equipment' && (
-        <EquipmentFilterSheet selected={draftEquip} resultCount={previewCount}
-          onToggle={(v) => setDraftEquip(a => toggleIn(a, v))}
-          onClear={() => { setDraftEquip([]); setEquipFilter([]); setSheet(null) }}
-          onApply={() => { setEquipFilter(draftEquip); setSheet(null) }}
-          onClose={() => setSheet(null)} />
+      {openMovement && (
+        <VariationsSheet movement={openMovement} history={history}
+          onPick={(id) => { onPick(id); setOpenMovement(null) }}
+          onCreateNew={() => { const m = openMovement.muscle; setOpenMovement(null); onCreateNew(m) }}
+          onClose={() => setOpenMovement(null)} />
       )}
     </div>
+  )
+}
+
+// The equipment-variations modal: pinned title + movement name, then a
+// scrolling list of each variation with its recorded-set count.
+function VariationsSheet({ movement, history, onPick, onCreateNew, onClose }) {
+  return (
+    <Sheet title="Equipment Variations" titleTone="red" className="variations-sheet"
+      onClose={onClose}
+      footer={<button className="sheet-close" onClick={onClose}>Close</button>}
+      pinned={<div className="variations-movement">{movement.name}</div>}>
+      {movement.variations.map(ex => {
+        const sets = variationSetCount(history, ex.id)
+        return (
+          <button key={ex.id} className="variation-row" onClick={() => onPick(ex.id)}>
+            <span className="ex-row-badge"><QuestionMark color="#111111" /></span>
+            <span className="ex-row-text">
+              <span className="ex-row-name">{ex.equipment}</span>
+              <span className="ex-row-sub">{sets} set{sets === 1 ? '' : 's'} on record</span>
+            </span>
+            <AddExercise color="#111111" />
+          </button>
+        )
+      })}
+      <button className="ex-add-row" onClick={onCreateNew}>
+        <span className="ex-add-text">Add a new variation...</span>
+        <Plus color="#111111" />
+      </button>
+    </Sheet>
   )
 }
 
@@ -1263,10 +1456,11 @@ export default function App() {
   const [workouts, setWorkouts] = useState(initial.workouts)
   const [plan, setPlan] = useState(initial.plan || null)
   const [history, setHistory] = useState(initial.history || {})
+  const [workoutLog, setWorkoutLog] = useState(initial.workoutLog || [])
   const [paused, setPaused] = useState(initial.paused || null)
 
   useEffect(() => {
-    saveState({ exercises, workouts, plan, history, paused })
+    saveState({ exercises, workouts, plan, history, workoutLog, paused })
   }, [exercises, workouts, plan, history, paused])
 
   const exerciseMap = useMemo(() => Object.fromEntries(exercises.map(e => [e.id, e])), [exercises])
@@ -1279,6 +1473,7 @@ export default function App() {
   const [loggedSets, setLoggedSets] = useState({})
 
   const [historyExId, setHistoryExId] = useState(null)
+  const [openLogEntry, setOpenLogEntry] = useState(null)
   const [historyReturn, setHistoryReturn] = useState('start')
 
   const [draft, setDraft] = useState({ name: '', items: [] })
@@ -1440,6 +1635,20 @@ export default function App() {
       }
       return next
     })
+    // Snapshot the whole session into the workout logbook timeline.
+    const entry = {
+      id: newSlotId(),
+      date,
+      workoutId: activeWorkoutId,
+      name: (activeWorkoutId && workoutsById[activeWorkoutId]?.name) || 'Workout',
+      exercises: sessionItems
+        .map(it => ({ ex: exerciseMap[it.exId], sets: loggedSets[it.slotId] || [] }))
+        .filter(e => e.ex && e.sets.length > 0)
+        .map(e => ({
+          name: e.ex.name, muscle: e.ex.muscle, equipment: e.ex.equipment, sets: e.sets,
+        })),
+    }
+    if (entry.exercises.length) setWorkoutLog(prev => recordCompletedWorkout(prev, entry))
     setActiveWorkoutId(null); setSessionItems([]); setLoggedSets({}); setScreen('start')
   }
   const commitQuickAdd = () => {
@@ -1461,7 +1670,8 @@ export default function App() {
         onStartToday={startToday} onResume={resumeWorkout}
         onHistory={() => { setHistoryReturn('start'); setScreen('historyPicker') }}
         onPlanOptions={() => setShowPlanOptions(true)}
-        onWorkbook={() => setComingSoon('Workbook')}
+        onWorkbook={() => setScreen('workoutLog')}
+        onExercises={() => setScreen('exerciseLog')}
         onSettings={() => setComingSoon('Settings')} />
       {showPlanOptions && (
         <PlanOptionsSheet onEdit={editPlan}
@@ -1526,13 +1736,13 @@ export default function App() {
   )
 
   if (screen === 'chooseExercise') return (
-    <ChooseExercise exercises={exercises} onPick={handlePick}
+    <ChooseExercise exercises={exercises} history={history} onPick={handlePick}
       onCreateNew={(m) => { setPresetMuscle(m); setScreen('configureExercise') }}
       onBack={pickerBack} />
   )
 
   if (screen === 'historyPicker') return (
-    <ChooseExercise exercises={exercises} title="Exercise History"
+    <ChooseExercise exercises={exercises} history={history} title="Exercise History"
       onPick={(exId) => { setHistoryExId(exId); setHistoryReturn('historyPicker'); setScreen('history') }}
       onCreateNew={(m) => { setPresetMuscle(m); setScreen('configureExercise') }}
       onBack={() => setScreen('start')} />
@@ -1586,6 +1796,22 @@ export default function App() {
     <ExerciseHistory exercise={exerciseMap[historyExId]}
       sessions={exerciseSessions(history, historyExId)}
       onBack={() => setScreen(historyReturn)} />
+  )
+
+  if (screen === 'workoutLog') return (
+    <WorkoutLogbook log={workoutLog}
+      onOpen={(entry) => { setOpenLogEntry(entry); setScreen('workoutLogDetail') }}
+      onBack={() => setScreen('start')} />
+  )
+
+  if (screen === 'workoutLogDetail' && openLogEntry) return (
+    <WorkoutLogDetail entry={openLogEntry} onBack={() => setScreen('workoutLog')} />
+  )
+
+  if (screen === 'exerciseLog') return (
+    <ExerciseLogbook exercises={exercises} history={history}
+      onOpenExercise={(exId) => { setHistoryExId(exId); setHistoryReturn('exerciseLog'); setScreen('history') }}
+      onBack={() => setScreen('start')} />
   )
 
   if (screen === 'quickAdd' && activeWorkout) return (

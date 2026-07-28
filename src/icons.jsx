@@ -260,3 +260,12 @@ export function Book({ color = '#111111', size = 24 }) {
     </svg>
   )
 }
+
+// A dumbbell — the Exercises logbook button.
+export function Dumbbell({ color = '#111111', size = 24 }) {
+  return (
+    <svg {...box({ width: size, height: size })}>
+      <path d="M4 9H2v6h2v3h3V6H4v3Zm16 0v-3h-3v12h3v-3h2V9h-2Zm-9 2h2v2h-2v-2Zm-4-2h3v6H7V9Zm7 0h3v6h-3V9Z" fill={color}/>
+    </svg>
+  )
+}

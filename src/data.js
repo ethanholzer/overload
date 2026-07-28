@@ -276,6 +276,7 @@ export function loadState() {
         if (!parsed.exercises || parsed.exercises.length === 0) {
           parsed.exercises = seedExercises()
         }
+        if (!parsed.workoutLog) parsed.workoutLog = []
         return parsed
       }
     }
@@ -304,6 +305,7 @@ export function freshState() {
     workouts: [],
     plan: null,
     history: {},
+    workoutLog: [],
     paused: null,
   }
 }
@@ -326,8 +328,47 @@ export function exerciseSessions(history, exerciseId) {
   return [...sessions].reverse()
 }
 
-// A short buzz when the slider is released on failure. Android honours
-// this; iOS Safari ignores it silently, which is fine — it's a bonus.
+// ═══════════════════════════════════════════════════════════════════
+// MOVEMENTS (variation grouping)
+// ═══════════════════════════════════════════════════════════════════
+// A "movement" is all the exercises that share a name + muscle but use
+// different equipment — e.g. Bicep Curl on cable, dumbbell, barbell.
+// The search list shows one row per movement to cut down the number of
+// options a user scans; tapping opens the variations.
+export function movementKey(ex) {
+  return `${ex.muscle}::${ex.name.trim().toLowerCase()}`
+}
+
+// Group a flat exercise list into movements, preserving first-seen order.
+export function groupMovements(exercises) {
+  const map = new Map()
+  for (const ex of exercises) {
+    const k = movementKey(ex)
+    if (!map.has(k)) map.set(k, { key: k, name: ex.name, muscle: ex.muscle, variations: [] })
+    map.get(k).variations.push(ex)
+  }
+  return [...map.values()]
+}
+
+// How many recorded (working) sets exist for one exercise variation —
+// shown as "40 sets on record" in the variations modal.
+export function variationSetCount(history, exerciseId) {
+  const sessions = history?.[exerciseId]
+  if (!sessions) return 0
+  return sessions.reduce((n, s) => n + (s.sets || []).filter(x => !x.isWarmup).length, 0)
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// WORKOUT HISTORY (logbook timeline)
+// ═══════════════════════════════════════════════════════════════════
+// Completed workouts are recorded as a flat, reverse-chronological log
+// so the Workouts logbook can show a timeline. Each entry snapshots the
+// exercises and their sets so it stays accurate even if the workout is
+// later edited or deleted.
+export function recordCompletedWorkout(log, entry) {
+  return [entry, ...(log || [])]
+}
+
 export function buzz(ms = 18) {
   try { navigator.vibrate?.(ms) } catch { /* unsupported */ }
 }
