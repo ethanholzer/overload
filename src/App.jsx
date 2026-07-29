@@ -63,8 +63,7 @@ function SetCell({ set, num, onTap }) {
         <span className="sc-wr">{set.reps ?? '—'} reps</span>
       </span>
       {set.rpe != null ? (
-        <span className={`sc-tag ${failure ? 'failure' : ''}`}
-          style={failure ? undefined : { color: rpeColor(set.rpe) }}>
+        <span className={`sc-tag ${failure ? 'failure' : ''}`}>
           {failure ? 'F' : `RPE ${set.rpe}`}
         </span>
       ) : (tappable && <span className="sc-tag add-rpe">+ RPE</span>)}
@@ -479,7 +478,7 @@ function LoggingScreen({
               disabled={exIdx === items.length - 1} aria-label="Next exercise">
               <SmallChevronRight color="#111111" />
             </FlashBtn>
-            <FlashBtn className="log-round" onClick={onPlan} aria-label="Workout overview">
+            <FlashBtn className="log-round square" onClick={onPlan} aria-label="Workout overview">
               <List color="#111111" />
             </FlashBtn>
           </div>
@@ -761,7 +760,6 @@ function ExerciseLogbook({ exercises, history, onCreate, onOpenExercise, onBack 
                 return (
                   <button key={mv.key} className="ex-row"
                     onClick={() => single ? onOpenExercise(mv.variations[0].id) : setOpenMovement(mv)}>
-                    <span className="ex-row-badge"><QuestionMark color="#111111" /></span>
                     <span className="ex-row-text">
                       <span className="ex-row-name">{mv.name}</span>
                       <span className="ex-row-sub">{single ? 'Primary Exercise' : `${n} variations`}</span>
@@ -891,12 +889,6 @@ function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId,
     <div className="start-screen">
       <div className="start-top">
         <div className="start-toolbar">
-          <button className="tool-btn" onClick={onHistory} aria-label="Exercise history">
-            <History color="#111111" />
-          </button>
-          <button className="tool-btn" onClick={onWorkbook} aria-label="Workbook">
-            <Book color="#111111" />
-          </button>
           <button className="tool-btn" onClick={onSettings} aria-label="Settings">
             <Gear color="#111111" />
           </button>
@@ -1352,7 +1344,6 @@ function ChooseExercise({ exercises, history = {}, title = 'Add Exercise', onPic
     const single = n === 1
     return (
       <button className="ex-row" onClick={() => single ? onPick(movement.variations[0].id) : setOpenMovement(movement)}>
-        <span className="ex-row-badge"><QuestionMark color="#111111" /></span>
         <span className="ex-row-text">
           <span className="ex-row-name">{movement.name}</span>
           <span className="ex-row-sub">{single ? 'Primary Exercise' : `${n} variations`}</span>
@@ -1459,7 +1450,6 @@ function VariationsSheet({ movement, history, onPick, onCreateNew, onClose }) {
             const sets = variationSetCount(history, ex.id)
             return (
               <button key={ex.id} className="var-row" onClick={() => onPick(ex.id)}>
-                <span className="ex-row-badge"><QuestionMark color="#111111" /></span>
                 <span className="ex-row-text">
                   <span className="var-row-name">{ex.equipment}</span>
                   <span className="var-row-sub">{sets} set{sets === 1 ? '' : 's'} on record</span>
@@ -1469,7 +1459,6 @@ function VariationsSheet({ movement, history, onPick, onCreateNew, onClose }) {
             )
           })}
           <button className="var-row add" onClick={onCreateNew}>
-            <span className="ex-row-badge"><QuestionMark color="#111111" /></span>
             <span className="var-row-name bold">Add a new variation...</span>
             <Plus color="#111111" />
           </button>

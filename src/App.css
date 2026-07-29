@@ -522,9 +522,9 @@ input, textarea { font-family: inherit; }
   font-size: 10px; font-weight: 700; letter-spacing: 0.5px; color: var(--coral);
 }
 .log-ex-tools { display: flex; gap: 12px; }
-/* Card buttons (Swap, History): white circles with dark icons. */
+/* Card buttons (Swap, History): white squares (r8) with dark icons. */
 .log-btn {
-  width: 48px; height: 48px; border-radius: 999px; cursor: pointer; padding: 0;
+  width: 48px; height: 48px; border-radius: 8px; cursor: pointer; padding: 0;
   background: var(--white); border: 2px solid transparent;
   display: flex; align-items: center; justify-content: center;
   transition: border-color 0.5s ease-out;
@@ -537,13 +537,15 @@ input, textarea { font-family: inherit; }
 .log-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .log-exercise-count { font-size: 13px; font-weight: 500; color: var(--ink); flex-shrink: 0; }
 .log-nav-btns { display: flex; gap: 12px; }
-/* Nav buttons (prev / pause / next / overview): grey circles, dark icons. */
+/* Nav buttons (prev / pause / next): grey circles, dark icons. */
 .log-round {
   width: 48px; height: 48px; border-radius: 999px; cursor: pointer; padding: 0;
   background: #EBEBEB; border: 2px solid transparent;
   display: flex; align-items: center; justify-content: center;
   transition: border-color 0.5s ease-out;
 }
+/* The overview (Today's Plan) button is square with r8. */
+.log-round.square { border-radius: 8px; }
 .log-round:disabled { opacity: 0.35; cursor: not-allowed; }
 /* Tap feedback: a coral outline snaps on, then fades over ~0.5s. The
    snap-on is instant (no transition), the fade-out eases via the base
@@ -567,8 +569,11 @@ input, textarea { font-family: inherit; }
 .ss-btn.outline svg path { fill: var(--ink); }
 .ss-btn.solid   { background: var(--ink); color: var(--white); border: none; }
 
-/* ─── logged set cells: cream, 8px group, square badges ─── */
-.set-group { display: flex; flex-direction: column; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+/* ─── logged set cells: white group with a 2px black outline ─── */
+.set-group {
+  display: flex; flex-direction: column; border-radius: 8px; overflow: hidden;
+  flex-shrink: 0; border: 2px solid var(--ink);
+}
 .set-cell {
   display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px;
   background: var(--white);
@@ -585,13 +590,14 @@ input, textarea { font-family: inherit; }
 .sc-data { flex: 1; display: flex; align-items: center; gap: 4px; }
 .sc-wr { font-size: 16px; font-weight: 700; color: var(--ink); }
 .sc-x  { font-size: 14px; font-weight: 400; color: var(--ink); }
+/* RPE tag: white pill, 1px violet border, r4, violet-light text. */
 .sc-tag {
   display: inline-flex; align-items: center; height: 28px; padding: 4px 10px;
-  border-radius: 4px; background: var(--white);
-  font-size: 12px; font-weight: 700; white-space: nowrap;
+  border-radius: 4px; background: var(--white); border: 1px solid var(--violet);
+  font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--violet-lt);
 }
 .sc-tag.failure {
-  background: var(--violet); color: var(--white);
+  background: var(--violet); color: var(--white); border-color: var(--violet);
   min-width: 28px; justify-content: center;
 }
 .sc-tag.add-rpe { background: transparent; color: var(--violet); border: 1px dashed var(--violet); font-weight: 800; }
@@ -961,8 +967,8 @@ input, textarea { font-family: inherit; }
 
 /* Workout card: white, full violet border, kebab, badges, View History. */
 .mw-card {
-  background: var(--white); border: 2px solid var(--violet); border-radius: 0;
-  padding: 16px; margin-bottom: 20px;
+  background: var(--white); border: none; border-left: 8px solid var(--violet);
+  border-radius: 0; padding: 16px; margin-bottom: 20px;
   display: flex; flex-direction: column; gap: 20px;
 }
 .mw-card-top { display: flex; align-items: flex-start; gap: 8px; }
@@ -1052,7 +1058,7 @@ input, textarea { font-family: inherit; }
   padding: 14px 16px 12px; flex-shrink: 0;
 }
 .var-namebox {
-  flex-shrink: 0; background: #EBEBEB; border-right: 8px solid var(--coral);
+  flex-shrink: 0; background: #EBEBEB; border-left: 8px solid var(--coral);
   padding: 8px 20px 12px;
 }
 .var-name { font-size: 32px; font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
