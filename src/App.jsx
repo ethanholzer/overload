@@ -15,12 +15,13 @@ import {
 import { muscleIcon } from './assets/muscleGraphics.js'
 import planBodyArt from './assets/plan-body.svg'
 import homeGraphic from './assets/HomepageGraphic.png'
+import homeBg from './assets/HomepageChest.png'
 import {
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Edit, History, Pause, ArrowRight,
   SmallChevronLeft, SmallChevronRight, SmallChevronUp, SmallChevronDown,
   Share, Close, KebabMenu, Trash, Swap, List, Search, Check,
-  AddExercise, Book, Gear, Dumbbell, QuestionMark,
+  AddExercise, Book, Gear, Dumbbell, QuestionMark, Quickstart,
 } from './icons.jsx'
 
 const uid = () => Math.random().toString(36).slice(2, 9)
@@ -887,6 +888,9 @@ function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId,
 
   return (
     <div className="start-screen">
+      {/* Full-bleed anatomy backdrop behind everything. */}
+      <img className="start-bg" src={homeBg} alt="" aria-hidden="true" />
+
       <div className="start-top">
         <div className="start-toolbar">
           <button className="tool-btn" onClick={onSettings} aria-label="Settings">
@@ -894,87 +898,83 @@ function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId,
           </button>
         </div>
 
+        {/* Wordmark is white against the backdrop now. */}
         <div className="overload-stack">
-          <span className="ol-back"> OVERLOAD</span>
-          <span className="ol-front">OVERLOAD</span>
+          <span className="ol-front white">OVERLOAD</span>
         </div>
 
-        {/* Logbook entry points — review saved workouts/exercises and
-            their history. */}
         <div className="logbook-row">
-          <button className="logbook-btn" onClick={onWorkbook}>
+          <button className="logbook-btn violet" onClick={onWorkbook}>
             <Book color="#111111" /> Workouts
           </button>
-          <button className="logbook-btn" onClick={onExercises}>
+          <button className="logbook-btn coral" onClick={onExercises}>
             <Dumbbell color="#111111" /> Exercises
           </button>
         </div>
+      </div>
 
-        {/* Nothing scheduled yet — the anatomy graphic fills the space
-            instead of leaving a blank page. */}
-        {!todayWorkout && !plan && (
-          <div className="start-hero">
-            <img className="start-hero-img" src={homeGraphic} alt="" aria-hidden="true" />
-          </div>
-        )}
-
-        {todayWorkout && (
-          <div className="start-section">
-            <p className="section-label">TODAY'S WORKOUT</p>
-            <div className="wk-card">
-              <div className="wk-card-top">
-                <span className="cal-chip">
-                  <span className="cal-chip-month">{MONTHS_SHORT[now.getMonth()]}</span>
-                  <span className="cal-chip-day">{now.getDate()}</span>
+      {/* Bottom region: the active plan panel, or the create/quickstart
+          row when there's no plan yet. */}
+      {plan ? (
+        <div className="plan-panel">
+          <button className="plan-panel-kebab" onClick={onPlanOptions} aria-label="Plan options">
+            <KebabMenu color="#111111" />
+          </button>
+          <span className="active-badge">ACTIVE</span>
+          <p className="plan-panel-label">YOUR WORKOUT PLAN</p>
+          <h2 className="plan-panel-name">{plan.name}</h2>
+          <div className="plan-days">
+            {Array.from({ length: plan.days }, (_, i) => {
+              const state = i < dayIdx ? 'done' : i === dayIdx ? 'today' : 'future'
+              return (
+                <span key={i} className={`plan-day ${state}`}>
+                  {i === dayIdx && <span className="plan-day-dot" />}
+                  {i + 1}
                 </span>
-                <span className="wk-card-text">
-                  <span className="wk-card-name">{todayWorkout.name}</span>
-                  <span className="wk-badge">
+              )
+            })}
+          </div>
+
+          {/* Today's workout card. */}
+          {todayWorkout ? (
+            <div className="today-card">
+              <div className="today-card-top">
+                <span className="today-cal">
+                  <span className="today-cal-strip" />
+                  <span className="today-cal-day">{now.getDate()}</span>
+                </span>
+                <span className="today-card-text">
+                  <span className="today-card-name">{todayWorkout.name}</span>
+                  <span className="today-badge">
                     {todayWorkout.items.length} EXERCISE{todayWorkout.items.length === 1 ? '' : 'S'}
                   </span>
                 </span>
+                <button className="today-swap" onClick={onPlanOptions} aria-label="Swap workout">
+                  <Swap color="#111111" />
+                </button>
               </div>
-              <button className="wk-cta"
+              <button className="today-cta"
                 onClick={() => (isPausedToday ? onResume() : onStartToday(todayWorkoutId))}>
-                {isPausedToday ? 'Resume Workout' : 'Start Workout'}
+                {isPausedToday ? 'RESUME WORKOUT' : 'START WORKOUT'} <ArrowRight />
               </button>
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom sheet: the active plan, or the two entry points when
-          there isn't one yet. */}
-      <div className="start-bottom">
-        {plan ? (
-          <div className="plan-card">
-            <div className="plan-card-head">
-              <span className="active-badge">ACTIVE</span>
-              <button className="wk-kebab" onClick={onPlanOptions} aria-label="Plan options">
-                <KebabMenu color="#111111" />
-              </button>
+          ) : (
+            <div className="today-card rest">
+              <p className="today-rest-label">Rest day — nothing scheduled.</p>
             </div>
-            <p className="section-label">YOUR WORKOUT PLAN</p>
-            <h2 className="plan-card-name">{plan.name}</h2>
-            <div className="plan-days">
-              {Array.from({ length: plan.days }, (_, i) => (
-                <span key={i} className={`plan-day ${plan.slots[i] ? 'on' : 'rest'} ${i === dayIdx ? 'today' : ''}`}>
-                  {i + 1}
-                </span>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="start-cta-stack">
-            <button className="start-cta ghost" onClick={onStartWorkout}>
-              START A WORKOUT <ArrowRight color="#111111" />
-            </button>
-            <button className="start-cta solid" onClick={onCreatePlan}>
-              CREATE A WORKOUT PLAN <ArrowRight />
-            </button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      ) : (
+        <div className="start-cta-row">
+          <div className="start-cta-scrim" />
+          <button className="start-cta solid" onClick={onCreatePlan}>
+            CREATE A WORKOUT PLAN <ArrowRight />
+          </button>
+          <button className="start-quickstart" onClick={onStartWorkout} aria-label="Quickstart a workout">
+            <Quickstart color="#FFFFFF" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

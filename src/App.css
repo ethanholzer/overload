@@ -95,96 +95,136 @@ input, textarea { font-family: inherit; }
 .muscle-icon { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 
 /* ═══ START PAGE ═════════════════════════════════════════════════════ */
-.start-screen { background: var(--cream); display: flex; flex-direction: column; }
-.start-top { flex: 1; min-height: 0; overflow-y: auto; padding: 62px 20px 20px; }
+.start-screen { background: var(--cream); display: flex; flex-direction: column; position: relative; }
+/* Full-bleed anatomy backdrop behind all content. */
+.start-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center top; z-index: 0;
+}
+.start-top {
+  position: relative; z-index: 2; flex-shrink: 0; padding: 62px 20px 20px;
+}
 .start-toolbar { display: flex; justify-content: flex-end; gap: 12px; }
 .tool-btn {
   width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
   background: var(--white); display: flex; align-items: center; justify-content: center;
 }
 
-.overload-stack { position: relative; height: 105px; margin-top: 32px; }
-.ol-back, .ol-front {
+.overload-stack { position: relative; height: 88px; margin-top: 32px; }
+.ol-front {
   position: absolute; left: 0; top: 0;
-  font-family: 'League Gothic', sans-serif; font-size: 112px; line-height: 100px;
+  font-family: 'League Gothic', sans-serif; font-size: 120px; line-height: 88px;
   text-transform: uppercase; white-space: nowrap;
 }
-.ol-back { color: var(--white); }
-.ol-front { color: var(--violet); top: 5px; }
+.ol-front.white { color: var(--white); }
 
-.start-section { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; }
+.logbook-row { display: flex; gap: 12px; margin-top: 16px; }
+.logbook-btn {
+  flex: 1; height: 48px; border-radius: 8px; cursor: pointer;
+  background: var(--white); color: var(--ink); border: 2px solid transparent;
+  font-size: 14px; font-weight: 800; font-family: 'Inter', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.logbook-btn.violet { border-color: var(--violet); }
+.logbook-btn.coral  { border-color: var(--coral); }
 
-/* Workout card — violet 0-blur shadow marks it as a WORKOUT. */
-/* Violet spine marks it as a WORKOUT. */
-.wk-card {
-  background: var(--white); border-radius: 0; padding: 16px 16px 20px;
-  border-left: 8px solid var(--violet);
-  display: flex; flex-direction: column; gap: 24px;
+/* ── Zero-state CTA row: create-plan pill + yellow quickstart ── */
+.start-cta-row {
+  position: relative; z-index: 2; margin-top: auto;
+  display: flex; align-items: flex-end; gap: 16px; padding: 16px 16px 40px;
 }
-.wk-card-top { display: flex; align-items: flex-start; gap: 12px; }
-.wk-card-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.wk-card-name {
-  font-size: 24px; font-weight: 900; color: #000000;
-  letter-spacing: -0.5px; overflow-wrap: anywhere;
+/* A dark gradient rising from the bottom keeps the CTAs legible over
+   the busy backdrop. */
+.start-cta-scrim {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 320px; z-index: -1;
+  background: linear-gradient(to top, rgba(17,17,17,0.92) 30%, rgba(17,17,17,0) 100%);
+  pointer-events: none;
 }
-.wk-badge {
-  align-self: flex-start; background: var(--coral); color: var(--white);
-  border-radius: 8px; padding: 4px 8px;
-  font-size: 11px; font-weight: 700; white-space: nowrap;
-}
-.wk-kebab { background: none; border: none; cursor: pointer; padding: 0; display: flex; flex-shrink: 0; }
-.wk-cta {
-  height: 39px; border: none; cursor: pointer; border-radius: 1000px;
-  background: var(--ink); color: var(--white); font-size: 14px; font-weight: 800;
-}
-.wk-cta.small { align-self: flex-end; padding: 0 24px; letter-spacing: 0.5px; }
-
-.cal-chip {
-  width: 44px; height: 46px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
-  border: 1px solid var(--violet); background: var(--white);
-  display: flex; flex-direction: column; align-items: center;
-}
-.cal-chip-month {
-  width: 100%; height: 16px; background: var(--violet); color: var(--white);
-  font-size: 8px; font-weight: 900; display: flex; align-items: center; justify-content: center;
-}
-.cal-chip-day {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 900; color: var(--ink);
-}
-
-/* Bottom sheet: active plan, or the two zero-state entry points. */
-/* Flat top edge with a hard 2px rule — this panel is a shelf, not a
-   floating card. */
-.start-bottom {
-  flex-shrink: 0; background: var(--white);
-  border-radius: 0; border-top: 2px solid var(--ink); padding: 16px 16px 40px;
-}
-.start-cta-stack { display: flex; flex-direction: column; gap: 12px; padding: 8px 0; }
 .start-cta {
-  width: 100%; height: 64px; border-radius: 1000px; cursor: pointer;
+  flex: 1; height: 64px; border-radius: 1000px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 10px;
   font-size: 16px; font-weight: 900;
 }
-.start-cta.ghost { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
-.start-cta.solid { background: var(--ink); border: none; color: var(--white); text-transform: uppercase; }
-
-.plan-card { display: flex; flex-direction: column; gap: 8px; }
-.plan-card-head { display: flex; align-items: center; }
-.active-badge {
-  background: var(--green); color: var(--white); border-radius: 8px; padding: 4px 8px;
-  font-size: 11px; font-weight: 700; margin-right: auto;
-}
-.plan-card-name { font-size: 40px; line-height: 44px; font-weight: 900; color: #000000; letter-spacing: -1px; }
-.plan-days { display: flex; gap: 4px; margin-top: 4px; }
-.plan-day {
-  flex: 1; height: 64px; border-radius: 8px;
+.start-cta.solid { background: var(--white); border: none; color: var(--ink); text-transform: uppercase; }
+.start-cta.solid svg path { fill: var(--ink); }
+.start-quickstart {
+  width: 64px; height: 64px; border-radius: 1000px; flex-shrink: 0; cursor: pointer;
+  background: var(--mustard); border: none;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 700; color: var(--white);
 }
-.plan-day.on   { background: var(--violet); }
-.plan-day.rest { background: var(--violet-lt); }
-.plan-day.today { outline: 2px solid var(--ink); outline-offset: -2px; }
+
+/* ── Active-plan panel: frosted shelf anchored to the bottom ── */
+.plan-panel {
+  position: relative; z-index: 2; margin-top: auto;
+  background: rgba(235,235,235,0.92); backdrop-filter: blur(8px);
+  border-top: 2px solid var(--ink); padding: 16px 16px 40px;
+  display: flex; flex-direction: column;
+}
+.plan-panel-kebab {
+  align-self: flex-start; background: none; border: none; cursor: pointer; padding: 0;
+  display: flex; margin-bottom: 8px;
+}
+.active-badge {
+  align-self: flex-start; background: var(--green); color: var(--white);
+  border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700;
+}
+.plan-panel-label { font-size: 11px; font-weight: 700; color: var(--step-txt); margin-top: 12px; }
+.plan-panel-name {
+  font-size: 40px; line-height: 44px; font-weight: 900; color: #000000;
+  letter-spacing: -1px; margin-top: 6px;
+}
+
+.plan-days { display: flex; gap: 4px; margin-top: 16px; }
+.plan-day {
+  position: relative; flex: 1; height: 64px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
+}
+/* Completed days: solid violet. Future days: violet-light. */
+.plan-day.done   { background: var(--violet); color: var(--white); }
+.plan-day.future { background: var(--violet-lt); color: var(--white); }
+/* Today: white fill, 2px violet outline, violet number, yellow dot above. */
+.plan-day.today {
+  background: var(--white); border: 2px solid var(--violet); color: var(--violet);
+}
+.plan-day-dot {
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 6px; border-radius: 999px; background: var(--mustard);
+}
+
+/* ── Today's workout card inside the plan panel ── */
+.today-card {
+  background: var(--white); border: 2px solid var(--violet); border-radius: 0;
+  margin-top: 16px; padding: 16px; display: flex; flex-direction: column; gap: 16px;
+}
+.today-card.rest { align-items: center; justify-content: center; padding: 28px 16px; }
+.today-rest-label { font-family: 'Gabarito','Inter',sans-serif; color: var(--muted); font-size: 15px; }
+.today-card-top { display: flex; align-items: center; gap: 12px; }
+.today-cal {
+  width: 44px; height: 46px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
+  border: 2px solid var(--violet); background: var(--white);
+  display: flex; flex-direction: column; align-items: center;
+}
+.today-cal-strip { width: 100%; height: 16px; background: var(--violet); flex-shrink: 0; }
+.today-cal-day {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 900; color: var(--ink);
+}
+.today-card-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.today-card-name { font-size: 24px; font-weight: 900; color: #000000; overflow-wrap: anywhere; }
+.today-badge {
+  align-self: flex-start; background: var(--coral); color: var(--white);
+  border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700;
+}
+.today-swap {
+  width: 40px; height: 40px; flex-shrink: 0; background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.today-cta {
+  height: 64px; border: none; cursor: pointer; border-radius: 1000px;
+  background: var(--ink); color: var(--white); font-size: 16px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
 
 /* ═══ SELECT A WORKOUT ═══════════════════════════════════════════════ */
 .sel-screen { background: var(--cream); display: flex; flex-direction: column; }
@@ -818,13 +858,6 @@ input, textarea { font-family: inherit; }
 
 /* ═══ ROUND 6 ══════════════════════════════════════════════════════ */
 
-/* ─── home: zero-state hero graphic ─── */
-.start-hero {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  padding: 8px 20px 0; min-height: 0;
-}
-.start-hero-img { width: 100%; max-width: 340px; height: auto; display: block; }
-
 /* ─── sheets: pinned head, scrolling body ─── */
 .sheet-pinned {
   flex-shrink: 0; display: flex; flex-direction: column; gap: 10px;
@@ -919,15 +952,6 @@ input, textarea { font-family: inherit; }
 .sel-header .hdr-back.white svg path { fill: var(--white); }
 
 /* ═══ LOGBOOKS ═════════════════════════════════════════════════════ */
-
-/* Home: Workouts / Exercises entry buttons under the wordmark. */
-.logbook-row { display: flex; gap: 12px; margin-top: 4px; }
-.logbook-btn {
-  flex: 1; height: 48px; border-radius: 8px; border: none; cursor: pointer;
-  background: var(--white); color: var(--ink);
-  font-size: 14px; font-weight: 800; font-family: 'Inter', sans-serif;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-}
 
 /* ═══ MY WORKOUTS / HISTORY / DETAILS ═════════════════════════════ */
 .mw-screen { display: flex; flex-direction: column; background: var(--cream); height: 100%; }
