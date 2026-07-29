@@ -166,6 +166,31 @@ export function formatHistoryDate(iso) {
   }).toUpperCase()
 }
 
+// "6 EXERCISES • 24 SETS • 5 TO FAILURE" — the red summary line under a
+// completed session, built from a workoutLog entry.
+export function sessionSummaryLine(entry) {
+  const exCount = entry.exercises.length
+  let sets = 0, failures = 0
+  for (const e of entry.exercises) {
+    for (const s of e.sets) {
+      if (s.isWarmup) continue
+      sets += 1
+      if (isFailure(s.rpe)) failures += 1
+    }
+  }
+  const parts = [
+    `${exCount} EXERCISE${exCount === 1 ? '' : 'S'}`,
+    `${sets} SET${sets === 1 ? '' : 'S'}`,
+  ]
+  if (failures > 0) parts.push(`${failures} TO FAILURE`)
+  return parts.join(' • ')
+}
+
+// All completed sessions for one workout id, newest first.
+export function workoutHistory(log, workoutId) {
+  return (log || []).filter(e => e.workoutId === workoutId)
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // SEED EXERCISE LIBRARY
 // ═══════════════════════════════════════════════════════════════════

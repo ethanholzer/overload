@@ -42,7 +42,7 @@ input, textarea { font-family: inherit; }
 
 .start-screen, .plan-screen, .sel-screen, .cw-screen, .ce-screen,
 .cfg-screen, .log-screen, .done-screen, .hist-screen, .cp-screen, .cs-screen,
-.log-book-screen {
+.log-book-screen, .mw-screen {
   position: relative; width: 100%; height: 100%; overflow: hidden;
 }
 /* The transition stage is the fixed device frame; layers fill it. */
@@ -923,35 +923,106 @@ input, textarea { font-family: inherit; }
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 
-/* Workouts logbook — chronological timeline. */
-.log-book-screen { display: flex; flex-direction: column; background: var(--cream); height: 100%; }
-.log-book-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 16px 40px; }
+/* ═══ MY WORKOUTS / HISTORY / DETAILS ═════════════════════════════ */
+.mw-screen { display: flex; flex-direction: column; background: var(--cream); height: 100%; }
 .log-book-empty {
   font-family: 'Gabarito', 'Inter', sans-serif;
   color: var(--muted); font-size: 15px; line-height: 1.4; padding: 24px 4px;
 }
-.timeline-row {
-  width: 100%; background: none; border: none; cursor: pointer; text-align: left;
-  display: flex; align-items: stretch; gap: 14px; padding: 0;
-}
-.timeline-rail { position: relative; width: 16px; flex-shrink: 0; display: flex; justify-content: center; }
-.timeline-dot {
-  width: 14px; height: 14px; border-radius: 999px; background: var(--violet);
-  margin-top: 20px; flex-shrink: 0; z-index: 1;
-}
-.timeline-line {
-  position: absolute; top: 34px; bottom: -6px; width: 2px; background: var(--cream-dk);
-}
-.timeline-body {
-  flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 14px 0 18px;
-}
-.timeline-date { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--muted); text-transform: uppercase; }
-.timeline-name { font-size: 20px; font-weight: 800; color: var(--ink); }
-.timeline-meta { font-size: 13px; color: var(--muted); }
-.timeline-row > svg { align-self: center; flex-shrink: 0; }
 
-/* Workout-log detail reuses the sage complete screen. */
-.logdetail-date { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: var(--ink); opacity: 0.6; text-transform: uppercase; margin-bottom: 2px; }
+/* Compact header: violet round back, centred title, violet Create pill.
+   White variant is used on History/Details. */
+.mw-header {
+  flex-shrink: 0; background: var(--cream); border-bottom: 2px solid var(--ink);
+  padding: 62px 16px 16px; display: flex; align-items: center; gap: 12px;
+}
+.mw-header.white { background: var(--white); }
+.mw-back {
+  width: 48px; height: 48px; border-radius: 999px; border: none; cursor: pointer; padding: 0;
+  background: var(--violet); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.mw-title {
+  flex: 1; text-align: center; font-size: 18px; font-weight: 700; color: var(--ink);
+}
+.mw-create {
+  min-width: 79px; height: 48px; padding: 0 16px; border: none; cursor: pointer;
+  border-radius: 1000px; background: var(--violet); color: var(--white);
+  font-size: 16px; font-weight: 800; flex-shrink: 0;
+}
+.mw-header-spacer { min-width: 79px; }
+
+.mw-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 20px 40px; }
+.mw-listlabel {
+  display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+  color: var(--muted); margin-bottom: 12px;
+}
+.mw-listcount { color: var(--violet); }
+
+/* Workout card: white, full violet border, kebab, badges, View History. */
+.mw-card {
+  background: var(--white); border: 2px solid var(--violet); border-radius: 0;
+  padding: 16px; margin-bottom: 20px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.mw-card-top { display: flex; align-items: flex-start; gap: 8px; }
+.mw-card-info { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.mw-card-name { font-size: 24px; font-weight: 900; color: #000000; overflow-wrap: anywhere; }
+.mw-badges { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.mw-badge {
+  border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700; color: var(--white);
+}
+.mw-badge.completed { background: var(--violet); }
+.mw-badge.exercises { background: var(--coral); }
+.mw-kebab {
+  width: 32px; height: 32px; border: none; background: none; cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.mw-card-actions { display: flex; justify-content: flex-end; }
+.mw-history-btn {
+  height: 39px; padding: 0 20px; border-radius: 1000px; cursor: pointer;
+  background: var(--white); border: 2px solid var(--ink); color: var(--ink);
+  font-size: 14px; font-weight: 800; text-transform: uppercase;
+}
+
+/* Pinned workout banner (History + Details). */
+.wh-banner {
+  flex-shrink: 0; background: var(--white); border-bottom: 2px solid var(--ink);
+  padding: 0 20px 20px;
+}
+.wh-banner-card {
+  background: #EBEBEB; border: 2px solid var(--violet); border-radius: 0;
+  padding: 8px 20px 12px; display: flex; flex-direction: column; gap: 4px;
+}
+.wh-banner-name { font-size: 32px; font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
+.wh-banner-sub { font-size: 11px; font-weight: 700; color: var(--violet); }
+.wd-date { display: block; font-size: 11px; font-weight: 700; color: #555451; padding: 16px 0 8px; }
+.wd-banner-sub { font-size: 11px; font-weight: 700; color: var(--coral); }
+
+/* History: date-grouped session rows. */
+.wh-scroll { padding-top: 16px; }
+.wh-group { margin-bottom: 22px; }
+.wh-date {
+  display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+  color: #555451; margin-bottom: 8px;
+}
+.wh-session {
+  width: 100%; background: var(--white); border: 2px solid var(--violet); border-radius: 0;
+  padding: 16px; cursor: pointer; text-align: left;
+  display: flex; align-items: center; gap: 12px;
+}
+.wh-session-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.wh-session-name { font-size: 24px; font-weight: 900; color: #000000; }
+.wh-session-sub { font-size: 11px; font-weight: 700; color: var(--coral); }
+
+/* Details: per-exercise white cards with set rows. */
+.wd-scroll { flex: 1; min-height: 0; overflow-y: auto; background: var(--cream); padding: 16px 20px 40px; }
+.wd-ex-card {
+  background: var(--white); border-radius: 8px; padding: 16px; margin-bottom: 14px;
+}
+.wd-ex-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+.wd-ex-name { font-size: 24px; font-weight: 800; color: var(--ink); }
+.wd-ex-sub { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
 
 /* Exercises logbook reuses the picker's group/rows. */
 .ce-group-head {
@@ -968,20 +1039,40 @@ input, textarea { font-family: inherit; }
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 
-/* Variations modal: red League Gothic title, movement name pinned. */
-.variations-sheet .sheet-title { font-size: 40px; }
-.variations-movement {
-  font-size: 32px; font-weight: 800; color: var(--ink); padding: 0 4px 4px;
-  overflow-wrap: anywhere;
+/* Equipment Variations modal: white sheet, coral League Gothic title,
+   an EBEBEB name box with an 8px coral spine on the RIGHT, then full-bleed
+   EBEBEB variation rows. */
+.var-sheet {
+  background: var(--white); padding: 0; gap: 0;
+  max-height: 88vh; display: flex; flex-direction: column;
 }
-.variations-sheet .sheet-body { max-height: 46vh; }
-.variation-row {
+.var-sheet .sheet-handle { margin: 16px auto 0; }
+.var-title {
+  font-size: 54px; line-height: 48px; color: var(--coral);
+  padding: 14px 16px 12px; flex-shrink: 0;
+}
+.var-namebox {
+  flex-shrink: 0; background: #EBEBEB; border-right: 8px solid var(--coral);
+  padding: 8px 20px 12px;
+}
+.var-name { font-size: 32px; font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
+.var-list { flex: 1; min-height: 0; overflow-y: auto; }
+.var-row {
   width: 100%; min-height: 68px; padding: 14px 16px;
   display: flex; align-items: center; gap: 12px;
-  background: #EBEBEB; border: none; border-bottom: 2px solid var(--white);
-  cursor: pointer; text-align: left;
+  background: #EBEBEB; border: none; cursor: pointer; text-align: left;
 }
-.variation-row:active { filter: brightness(0.96); }
+.var-row + .var-row { border-top: 1px solid rgba(0,0,0,0.06); }
+.var-row:active { filter: brightness(0.96); }
+.var-row-name { font-size: 16px; font-weight: 500; color: #000000; }
+.var-row-name.bold { font-weight: 800; flex: 1; }
+.var-row-sub { font-family: 'Gabarito', 'Inter', sans-serif; font-size: 14px; color: var(--sub); }
+.var-footer { flex-shrink: 0; background: var(--white); padding: 10px 16px 24px; }
+.var-close {
+  width: 100%; height: 48px; border-radius: 1000px; cursor: pointer;
+  background: var(--white); border: 2px solid var(--ink); color: var(--ink);
+  font-size: 14px; font-weight: 700;
+}
 
 /* ═══ PLAN STARTING-DATE CALENDAR ═════════════════════════════════ */
 .cal {

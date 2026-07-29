@@ -10,6 +10,7 @@ import {
   workoutMuscles, workoutSummaryLine, formatHistoryDate,
   loadState, saveState, freshState, lastSessionSets, exerciseSessions,
   groupMovements, variationSetCount, recordCompletedWorkout, movementKey,
+  sessionSummaryLine, workoutHistory,
 } from './data.js'
 import { muscleIcon } from './assets/muscleGraphics.js'
 import planBodyArt from './assets/plan-body.svg'
@@ -565,32 +566,93 @@ function ExerciseHistory({ exercise, sessions, onBack }) {
 // This is inventory, not history: every workout the user has (including
 // the three seeded defaults) shows here from first launch, whether or
 // not it's ever been done.
-function WorkoutLogbook({ workouts, exerciseMap, onStart, onBack }) {
+function WorkoutLogbook({ workouts, exerciseMap, onViewHistory, onKebab, onCreate, onBack }) {
   return (
-    <div className="log-book-screen">
-      <Header title="Workouts" onBack={onBack} tone="violet" />
-      <div className="log-book-scroll">
+    <div className="mw-screen">
+      {/* Compact header: violet back, centred title, violet Create pill. */}
+      <div className="mw-header">
+        <button className="mw-back" onClick={onBack} aria-label="Back">
+          <SmallChevronLeft color="#FFFFFF" />
+        </button>
+        <span className="mw-title">My Workouts</span>
+        <button className="mw-create" onClick={onCreate}>Create</button>
+      </div>
+      <div className="mw-scroll">
+        <span className="mw-listlabel">
+          WORKOUT LIST <span className="mw-listcount">({workouts.length} WORKOUT{workouts.length === 1 ? '' : 'S'})</span>
+        </span>
         {workouts.length === 0 && (
-          <p className="log-book-empty">
-            No workouts yet. Build one from the home screen and it'll show up here.
-          </p>
+          <p className="log-book-empty">No workouts yet. Tap Create to build one.</p>
         )}
-        {workouts.map(w => (
-          <button key={w.id} className="lib-wk-card" onClick={() => onStart(w.id)}>
-            <span className="lib-wk-spine" />
-            <span className="lib-wk-body">
-              <span className="lib-wk-name">{w.name}</span>
-              <span className="lib-wk-meta">{workoutSummaryLine(w, exerciseMap)}</span>
-            </span>
-            <SmallChevronRight color="#111111" />
-          </button>
+        {workouts.map(w => {
+          const exCount = (w.items || []).length
+          const times = w.timesCompleted || 0
+          return (
+            <div key={w.id} className="mw-card">
+              <div className="mw-card-top">
+                <div className="mw-card-info">
+                  <span className="mw-card-name">{w.name}</span>
+                  <div className="mw-badges">
+                    <span className="mw-badge completed">COMPLETED {times} TIME{times === 1 ? '' : 'S'}</span>
+                    <span className="mw-badge exercises">{exCount} EXERCISE{exCount === 1 ? '' : 'S'}</span>
+                  </div>
+                </div>
+                <button className="mw-kebab" onClick={() => onKebab(w)} aria-label="Workout options">
+                  <KebabMenu color="#111111" />
+                </button>
+              </div>
+              <div className="mw-card-actions">
+                <button className="mw-history-btn" onClick={() => onViewHistory(w)}>View History</button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// Chronological list of a single workout's completed sessions.
+function WorkoutHistory({ workout, sessions, onOpen, onBack }) {
+  const times = workout.timesCompleted || 0
+  return (
+    <div className="mw-screen">
+      <div className="mw-header white">
+        <button className="mw-back" onClick={onBack} aria-label="Back">
+          <SmallChevronLeft color="#FFFFFF" />
+        </button>
+        <span className="mw-title">Workout History</span>
+        <span className="mw-header-spacer" />
+      </div>
+      {/* Pinned banner naming the workout. */}
+      <div className="wh-banner">
+        <div className="wh-banner-card">
+          <span className="wh-banner-name">{workout.name}</span>
+          <span className="wh-banner-sub">COMPLETED {times} TIME{times === 1 ? '' : 'S'}</span>
+        </div>
+      </div>
+      <div className="mw-scroll wh-scroll">
+        {sessions.length === 0 && (
+          <p className="log-book-empty">You haven't completed this workout yet.</p>
+        )}
+        {sessions.map(entry => (
+          <div key={entry.id} className="wh-group">
+            <span className="wh-date">{formatHistoryDate(entry.date)}</span>
+            <button className="wh-session" onClick={() => onOpen(entry)}>
+              <span className="wh-session-text">
+                <span className="wh-session-name">{entry.name}</span>
+                <span className="wh-session-sub">{sessionSummaryLine(entry)}</span>
+              </span>
+              <SmallChevronRight color="#111111" />
+            </button>
+          </div>
         ))}
       </div>
     </div>
   )
 }
 
-// A single completed workout, set by set — shareable, no editing.
+// A single completed session, exercise by exercise, set by set — shareable.
 function WorkoutLogDetail({ entry, onBack }) {
   const onShare = async () => {
     const lines = ['OVERLOAD — ' + entry.name, formatHistoryDate(entry.date), '']
@@ -611,33 +673,32 @@ function WorkoutLogDetail({ entry, onBack }) {
     } catch { /* dismissed */ }
   }
   return (
-    <div className="done-screen logdetail">
-      <div className="done-scroll">
-        <div className="done-head">
-          <div className="done-head-text">
-            <p className="logdetail-date">{formatHistoryDate(entry.date)}</p>
-            <h1 className="display done-title">{entry.name}</h1>
-          </div>
-          <div className="done-actions">
-            <button className="done-share" onClick={onShare} aria-label="Share workout">
-              <Share color="#111111" />
-            </button>
-          </div>
-        </div>
-        <div className="done-list">
-          {entry.exercises.map((e, i) => (
-            <div key={i} className="done-ex">
-              <div className="done-ex-head">
-                <span className="done-ex-name">{e.name}</span>
-                <span className="done-ex-sub">{detailLine(e.muscle, e.equipment)}</span>
-              </div>
-              <SetGroup sets={e.sets} />
-            </div>
-          ))}
+    <div className="mw-screen">
+      <div className="mw-header white">
+        <button className="mw-back" onClick={onBack} aria-label="Back">
+          <SmallChevronLeft color="#FFFFFF" />
+        </button>
+        <span className="mw-title">Workout Details</span>
+        <button className="mw-create" onClick={onShare}>Share</button>
+      </div>
+      {/* Pinned date + workout banner with the red session summary. */}
+      <div className="wh-banner">
+        <span className="wd-date">{formatHistoryDate(entry.date)}</span>
+        <div className="wh-banner-card">
+          <span className="wh-banner-name">{entry.name}</span>
+          <span className="wd-banner-sub">{sessionSummaryLine(entry)}</span>
         </div>
       </div>
-      <div className="done-footer">
-        <button className="done-cta" onClick={onBack}>Back to Logbook</button>
+      <div className="wd-scroll">
+        {entry.exercises.map((e, i) => (
+          <div key={i} className="wd-ex-card">
+            <div className="wd-ex-head">
+              <span className="wd-ex-name">{e.name}</span>
+              <span className="wd-ex-sub">{detailLine(e.muscle, e.equipment)}</span>
+            </div>
+            <SetGroup sets={e.sets} />
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -1384,28 +1445,40 @@ function ChooseExercise({ exercises, history = {}, title = 'Add Exercise', onPic
 // scrolling list of each variation with its recorded-set count.
 function VariationsSheet({ movement, history, onPick, onCreateNew, onClose }) {
   return (
-    <Sheet title="Equipment Variations" titleTone="red" className="variations-sheet"
-      onClose={onClose}
-      footer={<button className="sheet-close" onClick={onClose}>Close</button>}
-      pinned={<div className="variations-movement">{movement.name}</div>}>
-      {movement.variations.map(ex => {
-        const sets = variationSetCount(history, ex.id)
-        return (
-          <button key={ex.id} className="variation-row" onClick={() => onPick(ex.id)}>
+    <div className="sheet-overlay" onClick={onClose}>
+      <div className="sheet var-sheet" onClick={e => e.stopPropagation()}>
+        <div className="sheet-handle" />
+        <h2 className="display var-title">Equipment Variations</h2>
+        {/* Exercise name fills the modal width with an 8px coral spine
+            on the RIGHT edge. */}
+        <div className="var-namebox">
+          <span className="var-name">{movement.name}</span>
+        </div>
+        <div className="var-list">
+          {movement.variations.map(ex => {
+            const sets = variationSetCount(history, ex.id)
+            return (
+              <button key={ex.id} className="var-row" onClick={() => onPick(ex.id)}>
+                <span className="ex-row-badge"><QuestionMark color="#111111" /></span>
+                <span className="ex-row-text">
+                  <span className="var-row-name">{ex.equipment}</span>
+                  <span className="var-row-sub">{sets} set{sets === 1 ? '' : 's'} on record</span>
+                </span>
+                <AddExercise color="#111111" />
+              </button>
+            )
+          })}
+          <button className="var-row add" onClick={onCreateNew}>
             <span className="ex-row-badge"><QuestionMark color="#111111" /></span>
-            <span className="ex-row-text">
-              <span className="ex-row-name">{ex.equipment}</span>
-              <span className="ex-row-sub">{sets} set{sets === 1 ? '' : 's'} on record</span>
-            </span>
-            <AddExercise color="#111111" />
+            <span className="var-row-name bold">Add a new variation...</span>
+            <Plus color="#111111" />
           </button>
-        )
-      })}
-      <button className="ex-add-row" onClick={onCreateNew}>
-        <span className="ex-add-text">Add a new variation...</span>
-        <Plus color="#111111" />
-      </button>
-    </Sheet>
+        </div>
+        <div className="var-footer">
+          <button className="var-close" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -1665,6 +1738,8 @@ export default function App() {
   const [presetMuscle, setPresetMuscle] = useState(null)
   const [configureReturn, setConfigureReturn] = useState('chooseExercise')
   const [optionsWorkoutId, setOptionsWorkoutId] = useState(null)
+  const [historyWorkoutId, setHistoryWorkoutId] = useState(null)
+  const [workoutReturn, setWorkoutReturn] = useState('selection')
   const [showPlanOptions, setShowPlanOptions] = useState(false)
   const [pickerMode, setPickerMode] = useState(null)
   const [selectMode, setSelectMode] = useState('start')   // 'start' | 'assign'
@@ -1702,7 +1777,7 @@ export default function App() {
       setPlanSlotIdx(null)
       setScreen('createPlan')
     } else {
-      setScreen(planDraft ? 'createPlan' : 'selection')
+      setScreen(planDraft ? 'createPlan' : workoutReturn)
     }
   }
   const deleteWorkout = (wid) => {
@@ -1849,6 +1924,7 @@ export default function App() {
 
   // ── render ──
   const optionsWorkout = optionsWorkoutId ? workoutsById[optionsWorkoutId] : null
+  const historyWorkout = historyWorkoutId ? workoutsById[historyWorkoutId] : null
 
   if (screen === 'start') content = (
     <>
@@ -1894,13 +1970,13 @@ export default function App() {
           }
           setScreen('createPlan')
         }}
-        onCreate={startCreate}
+        onCreate={() => { setWorkoutReturn('selection'); startCreate() }}
         onBack={() => setScreen(planDraft ? 'createPlan' : 'start')}
         onOptions={setOptionsWorkoutId} />
       {optionsWorkout && (
         <WorkoutOptionsSheet
           onDelete={() => deleteWorkout(optionsWorkout.id)}
-          onEdit={() => startEdit(optionsWorkout.id)}
+          onEdit={() => { setWorkoutReturn('selection'); startEdit(optionsWorkout.id) }}
           onClose={() => setOptionsWorkoutId(null)} />
       )}
     </>
@@ -1920,7 +1996,7 @@ export default function App() {
       onSave={saveWorkout}
       onCancel={() => {
         setEditingWorkoutId(null)
-        setScreen(planDraft ? 'selection' : 'selection')
+        setScreen(planDraft ? 'createPlan' : workoutReturn)
       }} />
   )
 
@@ -1988,13 +2064,30 @@ export default function App() {
   )
 
   if (screen === 'workoutLog') content = (
-    <WorkoutLogbook workouts={workouts} exerciseMap={exerciseMap}
-      onStart={(wid) => startToday(wid)}
-      onBack={() => setScreen('start')} />
+    <>
+      <WorkoutLogbook workouts={workouts} exerciseMap={exerciseMap}
+        onViewHistory={(w) => { setHistoryWorkoutId(w.id); setScreen('workoutHistory') }}
+        onKebab={(w) => setOptionsWorkoutId(w.id)}
+        onCreate={() => { setWorkoutReturn('workoutLog'); startCreate() }}
+        onBack={() => setScreen('start')} />
+      {optionsWorkout && (
+        <WorkoutOptionsSheet
+          onDelete={() => deleteWorkout(optionsWorkout.id)}
+          onEdit={() => { setWorkoutReturn('workoutLog'); startEdit(optionsWorkout.id) }}
+          onClose={() => setOptionsWorkoutId(null)} />
+      )}
+    </>
+  )
+
+  if (screen === 'workoutHistory' && historyWorkout) content = (
+    <WorkoutHistory workout={historyWorkout}
+      sessions={workoutHistory(workoutLog, historyWorkout.id)}
+      onOpen={(entry) => { setOpenLogEntry(entry); setScreen('workoutLogDetail') }}
+      onBack={() => setScreen('workoutLog')} />
   )
 
   if (screen === 'workoutLogDetail' && openLogEntry) content = (
-    <WorkoutLogDetail entry={openLogEntry} onBack={() => setScreen('workoutLog')} />
+    <WorkoutLogDetail entry={openLogEntry} onBack={() => setScreen('workoutHistory')} />
   )
 
   if (screen === 'exerciseLog') content = (
