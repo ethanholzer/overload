@@ -5,16 +5,16 @@
 // red = exercises.
 
 export const MUSCLE_GROUPS = [
-  'Chest', 'Back', 'Biceps', 'Triceps', 'Shoulders', 'Forearms',
-  'Abs', 'Upper Legs', 'Lower Legs',
+  'Chest', 'Shoulders', 'Biceps', 'Triceps', 'Back',
+  'Upper Legs', 'Lower Legs', 'Abs', 'Forearms',
 ]
 
 // ─── equipment ──────────────────────────────────────────────────────
 // Two families, matching the filter sheet in Figma. An exercise picks
 // exactly one; it's half of the "CHEST · CABLE" line shown everywhere.
 export const EQUIPMENT_GROUPS = [
-  { label: 'FREEWEIGHTS', items: ['Barbell', 'Dumbbell', 'Plate', 'Other'] },
-  { label: 'MACHINE', items: ['Cable', 'Smith Machine', 'Specialized'] },
+  { label: 'FREEWEIGHTS', items: ['Bar', 'Dumbbell', 'Plates', 'Bodyweight'] },
+  { label: 'MACHINE', items: ['Cable Machine', 'Smith Machine', 'Specialized Machine'] },
 ]
 export const EQUIPMENT = EQUIPMENT_GROUPS.flatMap(g => g.items)
 
@@ -103,6 +103,29 @@ export const MONTHS_LONG = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY',
 
 // ─── plan helpers ───────────────────────────────────────────────────
 const DAY_MS = 86400000
+
+// Same calendar day?
+export function sameDay(a, b) {
+  const x = new Date(a), y = new Date(b)
+  return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth()
+    && x.getDate() === y.getDate()
+}
+
+// Build a Sun-first month grid for the month containing `date`. Returns
+// rows of 7 cells; leading/trailing blanks are null.
+export function monthGrid(year, month) {
+  const first = new Date(year, month, 1)
+  const startDow = first.getDay()               // 0=Sun
+  const daysIn = new Date(year, month + 1, 0).getDate()
+  const cells = []
+  for (let i = 0; i < startDow; i++) cells.push(null)
+  for (let d = 1; d <= daysIn; d++) cells.push(new Date(year, month, d))
+  while (cells.length % 7 !== 0) cells.push(null)
+  const rows = []
+  for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7))
+  return rows
+}
+
 function midnight(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime() }
 
 // Which slot of the rotation lands on `when`. The plan repeats forever
@@ -146,73 +169,104 @@ export function formatHistoryDate(iso) {
 // ═══════════════════════════════════════════════════════════════════
 // SEED EXERCISE LIBRARY
 // ═══════════════════════════════════════════════════════════════════
-// Ten popular movements per muscle group so a new user can build a
-// workout immediately instead of typing a library from scratch. The
-// same movement at different equipment is a separate entry, because
-// the loading and the progression are genuinely different.
+// The default exercise library: movements grouped by muscle, each with
+// the equipment variations it's commonly performed on. The same movement
+// on different equipment is a separate entry, because the loading and the
+// progression are genuinely different.
 const SEED = {
   'Chest': [
-    ['Flat Bench Press', 'Barbell'], ['Flat Bench Press', 'Dumbbell'],
-    ['Flat Bench Press', 'Smith Machine'], ['Incline Bench Press', 'Barbell'],
-    ['Incline Bench Press', 'Dumbbell'], ['Incline Bench Press', 'Smith Machine'],
-    ['Pec Deck', 'Specialized'], ['Chest Fly', 'Cable'],
-    ['Chest Press', 'Specialized'], ['Push Up', 'Other'],
-  ],
-  'Back': [
-    ['Bent Over Row', 'Barbell'], ['Bent Over Row', 'Dumbbell'],
-    ['Lat Pulldown', 'Cable'], ['Seated Cable Row', 'Cable'],
-    ['Pull Up', 'Other'], ['Chin Up', 'Other'],
-    ['T-Bar Row', 'Barbell'], ['Single Arm Row', 'Dumbbell'],
-    ['Straight Arm Pulldown', 'Cable'], ['Deadlift', 'Barbell'],
-  ],
-  'Biceps': [
-    ['Bicep Curl', 'Dumbbell'], ['Bicep Curl', 'Barbell'],
-    ['Bicep Curl', 'Cable'], ['Preacher Curl', 'Dumbbell'],
-    ['Preacher Curl', 'Barbell'], ['Preacher Curl', 'Specialized'],
-    ['Bajan Cable Curl', 'Cable'], ['Hammer Curl', 'Dumbbell'],
-    ['Incline Curl', 'Dumbbell'], ['Concentration Curl', 'Dumbbell'],
-  ],
-  'Triceps': [
-    ['Tricep Pushdown', 'Cable'], ['Rope Pushdown', 'Cable'],
-    ['Skull Crusher', 'Barbell'], ['Skull Crusher', 'Dumbbell'],
-    ['Overhead Extension', 'Dumbbell'], ['Overhead Extension', 'Cable'],
-    ['Close Grip Bench Press', 'Barbell'], ['Tricep Kickback', 'Dumbbell'],
-    ['Dip', 'Other'], ['Tricep Extension', 'Specialized'],
+    ['Flat Bench Press', 'Bar'], ['Flat Bench Press', 'Dumbbell'],
+    ['Flat Bench Press', 'Smith Machine'], ['Flat Bench Press', 'Specialized Machine'],
+    ['Incline Bench Press', 'Bar'], ['Incline Bench Press', 'Dumbbell'],
+    ['Incline Bench Press', 'Smith Machine'], ['Incline Bench Press', 'Specialized Machine'],
+    ['Chest Fly / Pec Deck', 'Dumbbell'], ['Chest Fly / Pec Deck', 'Cable Machine'],
+    ['Chest Fly / Pec Deck', 'Specialized Machine'],
+    ['Push-Up', 'Bodyweight'], ['Push-Up', 'Dumbbell'],
+    ['Chest Dip', 'Bodyweight'], ['Chest Dip', 'Specialized Machine'],
+    ['Decline Bench Press', 'Bar'], ['Decline Bench Press', 'Dumbbell'],
+    ['Decline Bench Press', 'Smith Machine'],
   ],
   'Shoulders': [
-    ['Overhead Press', 'Barbell'], ['Overhead Press', 'Dumbbell'],
-    ['Overhead Press', 'Smith Machine'], ['Lateral Raise', 'Dumbbell'],
-    ['Lateral Raise', 'Cable'], ['Front Raise', 'Dumbbell'],
-    ['Rear Delt Fly', 'Dumbbell'], ['Rear Delt Fly', 'Specialized'],
-    ['Upright Row', 'Barbell'], ['Face Pull', 'Cable'],
+    ['Overhead Press', 'Bar'], ['Overhead Press', 'Dumbbell'],
+    ['Overhead Press', 'Smith Machine'], ['Overhead Press', 'Specialized Machine'],
+    ['Lateral Raise', 'Dumbbell'], ['Lateral Raise', 'Cable Machine'],
+    ['Lateral Raise', 'Specialized Machine'],
+    ['Front Raise', 'Dumbbell'], ['Front Raise', 'Plates'],
+    ['Rear Delt Fly / Reverse Pec Deck', 'Dumbbell'],
+    ['Rear Delt Fly / Reverse Pec Deck', 'Cable Machine'],
+    ['Rear Delt Fly / Reverse Pec Deck', 'Specialized Machine'],
+    ['Upright Row', 'Bar'], ['Upright Row', 'Cable Machine'],
+    ['Shrugs', 'Bar'], ['Shrugs', 'Dumbbell'], ['Shrugs', 'Specialized Machine'],
   ],
-  'Forearms': [
-    ['Wrist Curl', 'Barbell'], ['Wrist Curl', 'Dumbbell'],
-    ['Reverse Wrist Curl', 'Barbell'], ['Reverse Wrist Curl', 'Dumbbell'],
-    ['Reverse Curl', 'Barbell'], ['Reverse Curl', 'Cable'],
-    ["Farmer's Carry", 'Dumbbell'], ['Plate Pinch', 'Plate'],
-    ['Wrist Roller', 'Other'], ['Behind Back Wrist Curl', 'Barbell'],
+  'Biceps': [
+    ['Bicep Curl', 'Bar'], ['Bicep Curl', 'Dumbbell'], ['Bicep Curl', 'Cable Machine'],
+    ['Hammer Curl', 'Dumbbell'], ['Hammer Curl', 'Cable Machine'],
+    ['Preacher Curl', 'Bar'], ['Preacher Curl', 'Dumbbell'],
+    ['Preacher Curl', 'Specialized Machine'],
+    ['Concentration Curl', 'Dumbbell'],
+    ['Incline Dumbbell Curl', 'Dumbbell'],
+    ['Cable Curl', 'Cable Machine'],
+  ],
+  'Triceps': [
+    ['Tricep Pushdown', 'Cable Machine'],
+    ['Skull Crusher / Lying Tricep Extension', 'Bar'],
+    ['Skull Crusher / Lying Tricep Extension', 'Dumbbell'],
+    ['Skull Crusher / Lying Tricep Extension', 'Cable Machine'],
+    ['Overhead Tricep Extension', 'Dumbbell'], ['Overhead Tricep Extension', 'Cable Machine'],
+    ['Tricep Dip', 'Bodyweight'], ['Tricep Dip', 'Specialized Machine'],
+    ['Close-Grip Bench Press', 'Bar'], ['Close-Grip Bench Press', 'Smith Machine'],
+    ['Close-Grip Bench Press', 'Dumbbell'],
+    ['Tricep Kickback', 'Dumbbell'], ['Tricep Kickback', 'Cable Machine'],
+  ],
+  'Back': [
+    ['Lat Pulldown', 'Cable Machine'],
+    ['Pull-Up / Chin-Up', 'Bodyweight'], ['Pull-Up / Chin-Up', 'Specialized Machine'],
+    ['Bent-Over Row', 'Bar'], ['Bent-Over Row', 'Dumbbell'],
+    ['Bent-Over Row', 'Smith Machine'], ['Bent-Over Row', 'Cable Machine'],
+    ['Seated Cable Row', 'Cable Machine'], ['Seated Cable Row', 'Specialized Machine'],
+    ['Single-Arm Row', 'Dumbbell'], ['Single-Arm Row', 'Cable Machine'],
+    ['Single-Arm Row', 'Specialized Machine'],
+    ['T-Bar Row', 'Specialized Machine'], ['T-Bar Row', 'Cable Machine'],
   ],
   'Abs': [
-    ['Cable Crunch', 'Cable'], ['Hanging Leg Raise', 'Other'],
-    ['Plank', 'Other'], ['Crunch', 'Other'],
-    ['Russian Twist', 'Plate'], ['Decline Sit Up', 'Other'],
-    ['Ab Rollout', 'Other'], ['Weighted Sit Up', 'Plate'],
-    ['Leg Raise', 'Other'], ['Ab Crunch Machine', 'Specialized'],
+    ['Crunch', 'Bodyweight'], ['Crunch', 'Cable Machine'], ['Crunch', 'Specialized Machine'],
+    ['Leg Raise', 'Bodyweight'], ['Leg Raise', 'Dumbbell'], ['Leg Raise', 'Cable Machine'],
+    ['Russian Twist', 'Bodyweight'], ['Russian Twist', 'Dumbbell'], ['Russian Twist', 'Plates'],
+    ['Plank', 'Bodyweight'], ['Plank', 'Plates'],
+    ['Cable Woodchop', 'Cable Machine'],
+    ['Ab Wheel Rollout', 'Specialized Machine'],
   ],
   'Upper Legs': [
-    ['Back Squat', 'Barbell'], ['Front Squat', 'Barbell'],
-    ['Squat', 'Smith Machine'], ['Leg Press', 'Specialized'],
-    ['Romanian Deadlift', 'Barbell'], ['Romanian Deadlift', 'Dumbbell'],
-    ['Leg Extension', 'Specialized'], ['Leg Curl', 'Specialized'],
-    ['Bulgarian Split Squat', 'Dumbbell'], ['Walking Lunge', 'Dumbbell'],
+    ['Squat', 'Bar'], ['Squat', 'Dumbbell'], ['Squat', 'Smith Machine'],
+    ['Squat', 'Specialized Machine'], ['Squat', 'Bodyweight'],
+    ['Leg Press', 'Specialized Machine'],
+    ['Lunge', 'Dumbbell'], ['Lunge', 'Bar'], ['Lunge', 'Bodyweight'],
+    ['Leg Extension', 'Specialized Machine'],
+    ['Hamstring Curl', 'Specialized Machine'], ['Hamstring Curl', 'Dumbbell'],
+    ['Romanian Deadlift (RDL)', 'Bar'], ['Romanian Deadlift (RDL)', 'Dumbbell'],
+    ['Romanian Deadlift (RDL)', 'Specialized Machine'],
   ],
   'Lower Legs': [
-    ['Standing Calf Raise', 'Specialized'], ['Standing Calf Raise', 'Smith Machine'],
-    ['Seated Calf Raise', 'Specialized'], ['Seated Calf Raise', 'Plate'],
-    ['Calf Raise', 'Dumbbell'], ['Calf Raise', 'Barbell'],
-    ['Leg Press Calf Raise', 'Specialized'], ['Single Leg Calf Raise', 'Other'],
-    ['Donkey Calf Raise', 'Other'], ['Tibialis Raise', 'Other'],
+    ['Standing Calf Raise', 'Specialized Machine'], ['Standing Calf Raise', 'Smith Machine'],
+    ['Standing Calf Raise', 'Dumbbell'],
+    ['Seated Calf Raise', 'Specialized Machine'],
+    ['Donkey Calf Raise', 'Specialized Machine'], ['Donkey Calf Raise', 'Bodyweight'],
+    ['Single-Leg Calf Raise', 'Bodyweight'], ['Single-Leg Calf Raise', 'Dumbbell'],
+    ['Single-Leg Calf Raise', 'Smith Machine'],
+    ['Tibialis Raise', 'Bodyweight'], ['Tibialis Raise', 'Specialized Machine'],
+    ["Farmer's Walk (Calf/Ankle Focus)", 'Dumbbell'],
+    ["Farmer's Walk (Calf/Ankle Focus)", 'Plates'],
+    ["Farmer's Walk (Calf/Ankle Focus)", 'Specialized Machine'],
+  ],
+  'Forearms': [
+    ['Wrist Curl', 'Bar'], ['Wrist Curl', 'Dumbbell'], ['Wrist Curl', 'Cable Machine'],
+    ['Reverse Wrist Curl', 'Bar'], ['Reverse Wrist Curl', 'Dumbbell'],
+    ['Reverse Wrist Curl', 'Cable Machine'],
+    ["Farmer's Walk", 'Dumbbell'], ["Farmer's Walk", 'Plates'],
+    ["Farmer's Walk", 'Specialized Machine'],
+    ['Plate Pinch', 'Plates'],
+    ['Wrist Roller', 'Specialized Machine'],
+    ['Reverse Curl', 'Bar'], ['Reverse Curl', 'Dumbbell'], ['Reverse Curl', 'Cable Machine'],
   ],
 }
 
@@ -230,64 +284,106 @@ export function seedExercises() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// SEED WORKOUTS — three ready-made workouts every install starts with
+// ═══════════════════════════════════════════════════════════════════
+// These are library content, not history: they appear in "My Workouts"
+// and the selection/plan flows from first launch, before the user has
+// done anything. Each exercise is [name, muscle, equipment] using the
+// canonical equipment vocabulary (Cable, Smith Machine, Plate, …).
+const SEED_WORKOUTS = [
+  {
+    id: 'seed-wk-shoulders-back', name: 'Shoulders & Back',
+    exercises: [
+      ['Overhead Press', 'Shoulders', 'Smith Machine'],
+      ['Pull-Up / Chin-Up', 'Back', 'Bodyweight'],
+      ['Lateral Raise', 'Shoulders', 'Cable Machine'],
+      ['Seated Cable Row', 'Back', 'Cable Machine'],
+      ['Rear Delt Fly / Reverse Pec Deck', 'Shoulders', 'Cable Machine'],
+      ['Lat Pulldown', 'Back', 'Cable Machine'],
+    ],
+  },
+  {
+    id: 'seed-wk-chest-arms', name: 'Chest & Arms',
+    exercises: [
+      ['Incline Bench Press', 'Chest', 'Smith Machine'],
+      ['Pull-Up / Chin-Up', 'Back', 'Bodyweight'],
+      ['Tricep Pushdown', 'Triceps', 'Cable Machine'],
+      ['Chest Fly / Pec Deck', 'Chest', 'Cable Machine'],
+      ['Preacher Curl', 'Biceps', 'Bar'],
+      ['Tricep Kickback', 'Triceps', 'Cable Machine'],
+      ['Bicep Curl', 'Biceps', 'Cable Machine'],
+    ],
+  },
+  {
+    id: 'seed-wk-legs-abs', name: 'Legs & Abs',
+    exercises: [
+      ['Romanian Deadlift (RDL)', 'Upper Legs', 'Bar'],
+      ['Leg Extension', 'Upper Legs', 'Specialized Machine'],
+      ['Lunge', 'Upper Legs', 'Dumbbell'],
+      ['Standing Calf Raise', 'Lower Legs', 'Specialized Machine'],
+      ['Crunch', 'Abs', 'Cable Machine'],
+    ],
+  },
+]
+
+// Find an existing library exercise matching name+muscle+equipment, or
+// mint a new one. Returns { exercise, created } so the caller can add
+// any freshly-minted exercises to the library.
+function resolveExercise(existing, name, muscle, equipment) {
+  const key = (n, m, e) => `${m}::${n.trim().toLowerCase()}::${e}`
+  const found = existing.find(x => key(x.name, x.muscle, x.equipment) === key(name, muscle, equipment))
+  if (found) return { exercise: found, created: null }
+  const slug = `${muscle}-${name}-${equipment}`.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  const ex = { id: `seed-x-${slug}`, name, muscle, equipment }
+  return { exercise: ex, created: ex }
+}
+
+// Build the three seed workouts against a library, adding any exercises
+// they reference that aren't present yet. Returns { exercises, workouts }
+// so the caller ends up with a consistent pair.
+export function seedWorkouts(baseExercises) {
+  const exercises = [...baseExercises]
+  const workouts = SEED_WORKOUTS.map(w => {
+    const items = w.exercises.map(([name, muscle, equipment]) => {
+      const { exercise, created } = resolveExercise(exercises, name, muscle, equipment)
+      if (created) exercises.push(created)
+      return makeItem(exercise.id)
+    })
+    return { id: w.id, name: w.name, items, timesCompleted: 0 }
+  })
+  return { exercises, workouts }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
 // PERSISTENCE
 // ═══════════════════════════════════════════════════════════════════
-const KEY_V4 = 'overload:v4'
-const KEY_V3 = 'overload:v3'
-const KEY_V2 = 'overload:v2'
-
-// v3 exercises carried laterality + setup; v4 replaces both with a
-// single `equipment` value and drops the per-session details override.
-const SETUP_TO_EQUIPMENT = {
-  'Machine': 'Specialized', 'Freeweight': 'Dumbbell', 'Cables': 'Cable',
-}
-
-function migrateV3(old) {
-  const seeds = seedExercises()
-  const seedIds = new Set(seeds.map(s => s.id))
-  const carried = (old.exercises || []).map(e => ({
-    id: e.id,
-    name: e.name,
-    muscle: e.muscle,
-    equipment: e.equipment || SETUP_TO_EQUIPMENT[e.setup] || 'Other',
-  })).filter(e => !seedIds.has(e.id))
-  return {
-    exercises: [...seeds, ...carried],
-    workouts: (old.workouts || []).map(w => ({
-      id: w.id, name: w.name,
-      items: w.items || (w.exerciseIds || []).map(id => makeItem(id)),
-      timesCompleted: w.timesCompleted || 0,
-    })),
-    // The old fixed Sun–Sat `week` map has no equivalent in the new
-    // rotation-based plan, so plans start empty and the user builds one.
-    plan: null,
-    history: old.history || {},
-    paused: null,
-  }
-}
-
+const KEY_V5 = 'overload:v5'
 export function loadState() {
   try {
-    const raw = localStorage.getItem(KEY_V4)
+    const raw = localStorage.getItem(KEY_V5)
     if (raw) {
       const parsed = JSON.parse(raw)
       if (parsed && typeof parsed === 'object') {
-        // Make sure the seed library is present even for older v4 saves.
+        // Keep the seed library present even for older v5 saves.
         if (!parsed.exercises || parsed.exercises.length === 0) {
           parsed.exercises = seedExercises()
         }
         if (!parsed.workoutLog) parsed.workoutLog = []
+        // One-time seeding of the three default workouts.
+        if (!parsed.seededWorkouts) {
+          const seeded = seedWorkouts(parsed.exercises)
+          parsed.exercises = seeded.exercises
+          const have = new Set((parsed.workouts || []).map(w => w.id))
+          parsed.workouts = [...seeded.workouts.filter(w => !have.has(w.id)), ...(parsed.workouts || [])]
+          parsed.seededWorkouts = true
+        }
         return parsed
       }
     }
-    for (const key of [KEY_V3, KEY_V2]) {
-      const older = localStorage.getItem(key)
-      if (older) {
-        const migrated = migrateV3(JSON.parse(older))
-        saveState(migrated)
-        return migrated
-      }
-    }
+    // The v5 library replaced the entire exercise + equipment vocabulary,
+    // so pre-v5 saves aren't migrated — a new install starts fresh with
+    // the new library and preset workouts.
     return null
   } catch {
     return null
@@ -295,18 +391,21 @@ export function loadState() {
 }
 
 export function saveState(state) {
-  try { localStorage.setItem(KEY_V4, JSON.stringify(state)) } catch { /* ignore */ }
+  try { localStorage.setItem(KEY_V5, JSON.stringify(state)) } catch { /* ignore */ }
 }
 
-// A new install gets the seed library but no workouts and no plan.
+// A new install gets the seed library AND the three seed workouts, so
+// "My Workouts" and the selection flows have content immediately.
 export function freshState() {
+  const seeded = seedWorkouts(seedExercises())
   return {
-    exercises: seedExercises(),
-    workouts: [],
+    exercises: seeded.exercises,
+    workouts: seeded.workouts,
     plan: null,
     history: {},
     workoutLog: [],
     paused: null,
+    seededWorkouts: true,
   }
 }
 

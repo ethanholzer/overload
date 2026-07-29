@@ -41,9 +41,12 @@ button { font-family: inherit; }
 input, textarea { font-family: inherit; }
 
 .start-screen, .plan-screen, .sel-screen, .cw-screen, .ce-screen,
-.cfg-screen, .log-screen, .done-screen, .hist-screen, .cp-screen, .cs-screen {
-  position: relative; width: 393px; height: 852px; margin: 0 auto; overflow: hidden;
+.cfg-screen, .log-screen, .done-screen, .hist-screen, .cp-screen, .cs-screen,
+.log-book-screen {
+  position: relative; width: 100%; height: 100%; overflow: hidden;
 }
+/* The transition stage is the fixed device frame; layers fill it. */
+.screen-stage { width: 393px; height: 852px; margin: 0 auto; }
 
 /* ═══ SHARED ═════════════════════════════════════════════════════════ */
 .hdr {
@@ -611,13 +614,18 @@ input, textarea { font-family: inherit; }
 .sheet-overlay {
   position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.32);
   display: flex; align-items: flex-end; justify-content: center;
+  animation: scrim-in 0.25s ease-out both;
 }
 .sheet-overlay > * { width: 393px; max-width: 100%; }
 .sheet {
   width: 100%; max-height: 88%; overflow-y: auto;
   background: var(--cream); border-radius: 32px 32px 0 0;
   padding: 16px 16px 22px; display: flex; flex-direction: column; gap: 10px;
+  animation: sheet-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+/* The scrim fades; the panel slides up from below the screen edge. */
+@keyframes scrim-in { from { background: rgba(0,0,0,0); } to { background: rgba(0,0,0,0.32); } }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: #DDD6C8; align-self: center; flex-shrink: 0; }
 .sheet-title { font-size: 54px; line-height: 48px; }
 .sheet-title.red { color: var(--coral); }
@@ -974,3 +982,87 @@ input, textarea { font-family: inherit; }
   cursor: pointer; text-align: left;
 }
 .variation-row:active { filter: brightness(0.96); }
+
+/* ═══ PLAN STARTING-DATE CALENDAR ═════════════════════════════════ */
+.cal {
+  background: var(--white); border: 2px solid var(--ink); border-radius: 8px;
+  padding: 20px 24px 24px;
+}
+.cal-nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 20px; }
+.cal-arrow {
+  width: 24px; height: 24px; border: none; background: none; cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.cal-title { font-size: 16px; font-weight: 700; color: var(--ink); text-align: center; min-width: 150px; }
+.cal-weekdays, .cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
+}
+.cal-weekdays { margin-bottom: 8px; }
+.cal-weekday { text-align: center; font-size: 12px; font-weight: 700; color: var(--ink); }
+.cal-cell {
+  position: relative; aspect-ratio: 1; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 500; color: var(--ink); border-radius: 999px; padding: 0;
+}
+.cal-cell.blank { visibility: hidden; cursor: default; }
+/* Selected start date: violet disc, white number. */
+.cal-cell.sel { background: var(--violet); color: var(--white); }
+/* Today (when not selected): a small yellow dot above the number. */
+.cal-today-dot {
+  position: absolute; top: 2px; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 6px; border-radius: 999px; background: var(--mustard);
+}
+
+/* ═══ MY WORKOUTS — library cards ═════════════════════════════════ */
+.lib-wk-card {
+  width: 100%; display: flex; align-items: center; gap: 14px;
+  background: var(--white); border: none; border-left: 8px solid var(--violet);
+  border-radius: 0; padding: 18px 16px; margin-bottom: 12px; cursor: pointer; text-align: left;
+}
+.lib-wk-spine { display: none; }
+.lib-wk-body { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.lib-wk-name { font-size: 22px; font-weight: 800; color: var(--ink); }
+.lib-wk-meta { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.log-book-scroll { padding-top: 12px; }
+
+/* ═══ SCREEN TRANSITIONS ══════════════════════════════════════════ */
+.screen-stage {
+  position: relative; overflow: hidden;
+}
+/* Each screen fills the stage; layering lets one slide over another. */
+.screen-layer {
+  position: absolute; inset: 0; height: 100%;
+  display: flex; flex-direction: column; background: var(--cream);
+  will-change: transform;
+}
+/* Forward: incoming screen slides in from the right edge, casting a
+   soft shadow onto the screen it covers. */
+.screen-layer.entering-fwd {
+  animation: screen-in-right 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  box-shadow: -12px 0 24px rgba(0,0,0,0.12);
+  z-index: 2;
+}
+/* Back: the leaving (top) screen slides off to the right, revealing the
+   one beneath. */
+.screen-layer.leaving-back {
+  animation: screen-out-right 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  box-shadow: -12px 0 24px rgba(0,0,0,0.12);
+  z-index: 2;
+}
+/* The stationary layer underneath during either transition. */
+.screen-layer.under { z-index: 1; }
+
+@keyframes screen-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes screen-out-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+/* Honour reduced-motion: cut the slide, keep the navigation. */
+@media (prefers-reduced-motion: reduce) {
+  .screen-layer.entering-fwd, .screen-layer.leaving-back,
+  .sheet, .sheet-overlay { animation-duration: 0.01ms; }
+}

@@ -6,7 +6,7 @@ import {
   FEEL_STOPS, feelKnobLabel, feelToRpe, rpeColor, isFailure, buzz,
   DEFAULT_GOAL_REPS, makeItem, withSlotIds, newSlotId,
   PLAN_MIN_DAYS, PLAN_MAX_DAYS, PLAN_DEFAULT_DAYS,
-  planDayIndex, planTodayWorkoutId,
+  planDayIndex, planTodayWorkoutId, monthGrid, sameDay, MONTHS_LONG,
   workoutMuscles, workoutSummaryLine, formatHistoryDate,
   loadState, saveState, freshState, lastSessionSets, exerciseSessions,
   groupMovements, variationSetCount, recordCompletedWorkout, movementKey,
@@ -264,37 +264,54 @@ function PauseSheet({ onCancel, onConfirm }) {
   )
 }
 
-function SwapSheet({ muscle, options, onPick, onCreateNew, onClose }) {
+function SwapSheet({ muscle, options, history, onPick, onCreateNew, onClose }) {
+  const [openMovement, setOpenMovement] = useState(null)
+  const movements = groupMovements(options)
   return (
-    <Sheet title="Swap this exercise..." onClose={onClose}
-      className="swap-sheet"
-      footer={<button className="sheet-close" onClick={onClose}>Close</button>}
-      pinned={
-        <div className="swap-head">
-          <MuscleIcon muscle={muscle} size={60} />
-          <span className="swap-head-text">
-            <span className="list-name">{muscle}</span>
-            <span className="list-sub">{options.length} exercise{options.length === 1 ? '' : 's'}</span>
-          </span>
-        </div>
-      }>
-      {options.map(ex => (
-        <button key={ex.id} className="swap-row" onClick={() => onPick(ex.id)}>
-          <span className="swap-row-text">
-            <span className="swap-row-name">{ex.name}</span>
-            <span className="swap-row-sub">{detailLineSoft(ex.muscle, ex.equipment)}</span>
-          </span>
-          <SmallChevronRight color="#111111" />
+    <>
+      <Sheet title="Swap this exercise..." onClose={onClose}
+        className="swap-sheet"
+        footer={<button className="sheet-close" onClick={onClose}>Close</button>}
+        pinned={
+          <div className="swap-head">
+            <MuscleIcon muscle={muscle} size={60} />
+            <span className="swap-head-text">
+              <span className="list-name">{muscle}</span>
+              <span className="list-sub">{movements.length} exercise{movements.length === 1 ? '' : 's'}</span>
+            </span>
+          </div>
+        }>
+        {movements.map(mv => {
+          const single = mv.variations.length === 1
+          return (
+            <button key={mv.key} className="swap-row"
+              onClick={() => single ? onPick(mv.variations[0].id) : setOpenMovement(mv)}>
+              <span className="swap-row-text">
+                <span className="swap-row-name">{mv.name}</span>
+                <span className="swap-row-sub">
+                  {single ? detailLineSoft(mv.variations[0].muscle, mv.variations[0].equipment)
+                          : `${mv.variations.length} variations`}
+                </span>
+              </span>
+              <SmallChevronRight color="#111111" />
+            </button>
+          )
+        })}
+        {movements.length === 0 && (
+          <p className="sheet-empty">No other {muscle.toLowerCase()} exercises yet.</p>
+        )}
+        <button className="swap-row add" onClick={onCreateNew}>
+          <span className="swap-row-name">Add a new exercise...</span>
+          <Plus color="#111111" />
         </button>
-      ))}
-      {options.length === 0 && (
-        <p className="sheet-empty">No other {muscle.toLowerCase()} exercises yet.</p>
+      </Sheet>
+      {openMovement && (
+        <VariationsSheet movement={openMovement} history={history}
+          onPick={(id) => { setOpenMovement(null); onPick(id) }}
+          onCreateNew={() => { setOpenMovement(null); onCreateNew() }}
+          onClose={() => setOpenMovement(null)} />
       )}
-      <button className="swap-row add" onClick={onCreateNew}>
-        <span className="swap-row-name">Add a new exercise...</span>
-        <Plus color="#111111" />
-      </button>
-    </Sheet>
+    </>
   )
 }
 
@@ -388,7 +405,7 @@ function EquipmentFilterSheet({ selected, onToggle, onClear, onApply, resultCoun
 function LoggingScreen({
   exercise, exIdx, items, sets, doneFlags, lastTime, goalReps,
   onAddSet, onEditSet, onSwap, onCreateSwap, onGo, onNext, onPause,
-  onHistory, onPlan, isLastRemaining, swapOptions,
+  onHistory, onPlan, isLastRemaining, swapOptions, swapHistory,
 }) {
   const [sheet, setSheet] = useState(null)
   const [pausing, setPausing] = useState(false)
@@ -506,7 +523,7 @@ function LoggingScreen({
       )}
       {pausing && <PauseSheet onCancel={() => setPausing(false)} onConfirm={onPause} />}
       {showSwap && (
-        <SwapSheet muscle={exercise.muscle} options={swapOptions}
+        <SwapSheet muscle={exercise.muscle} options={swapOptions} history={swapHistory}
           onPick={(id) => { onSwap(id); setShowSwap(false) }}
           onCreateNew={() => { setShowSwap(false); onCreateSwap() }}
           onClose={() => setShowSwap(false)} />
@@ -542,36 +559,32 @@ function ExerciseHistory({ exercise, sessions, onBack }) {
 // ════════════════════════════════════════════════════════════════════
 //  WORKOUTS LOGBOOK — chronological timeline of completed workouts
 // ════════════════════════════════════════════════════════════════════
-function WorkoutLogbook({ log, onOpen, onBack }) {
+// ════════════════════════════════════════════════════════════════════
+//  MY WORKOUTS — the saved workouts library (seeded + user-made)
+// ════════════════════════════════════════════════════════════════════
+// This is inventory, not history: every workout the user has (including
+// the three seeded defaults) shows here from first launch, whether or
+// not it's ever been done.
+function WorkoutLogbook({ workouts, exerciseMap, onStart, onBack }) {
   return (
     <div className="log-book-screen">
       <Header title="Workouts" onBack={onBack} tone="violet" />
       <div className="log-book-scroll">
-        {log.length === 0 && (
+        {workouts.length === 0 && (
           <p className="log-book-empty">
-            No completed workouts yet. Finish a workout and it'll show up here as a timeline.
+            No workouts yet. Build one from the home screen and it'll show up here.
           </p>
         )}
-        {log.map((entry, i) => {
-          const setCount = entry.exercises.reduce(
-            (n, e) => n + e.sets.filter(s => !s.isWarmup).length, 0)
-          return (
-            <button key={entry.id || i} className="timeline-row" onClick={() => onOpen(entry)}>
-              <span className="timeline-rail">
-                <span className="timeline-dot" />
-                {i < log.length - 1 && <span className="timeline-line" />}
-              </span>
-              <span className="timeline-body">
-                <span className="timeline-date">{formatHistoryDate(entry.date)}</span>
-                <span className="timeline-name">{entry.name}</span>
-                <span className="timeline-meta">
-                  {entry.exercises.length} exercise{entry.exercises.length === 1 ? '' : 's'} · {setCount} set{setCount === 1 ? '' : 's'}
-                </span>
-              </span>
-              <SmallChevronRight color="#111111" />
-            </button>
-          )
-        })}
+        {workouts.map(w => (
+          <button key={w.id} className="lib-wk-card" onClick={() => onStart(w.id)}>
+            <span className="lib-wk-spine" />
+            <span className="lib-wk-body">
+              <span className="lib-wk-name">{w.name}</span>
+              <span className="lib-wk-meta">{workoutSummaryLine(w, exerciseMap)}</span>
+            </span>
+            <SmallChevronRight color="#111111" />
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -631,17 +644,24 @@ function WorkoutLogDetail({ entry, onBack }) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  EXERCISES LOGBOOK — the exercise library grouped by movement
+//  MY EXERCISES — the exercise library, grouped by muscle → movement
 // ════════════════════════════════════════════════════════════════════
-function ExerciseLogbook({ exercises, history, onOpenExercise, onBack }) {
+// Muscle groups expand to their movements; each movement shows how many
+// equipment variations it has. Tapping a movement opens the variations
+// modal. "Create" adds a new exercise from here.
+function ExerciseLogbook({ exercises, history, onCreate, onOpenExercise, onBack }) {
   const [q, setQ] = useState('')
+  const [expanded, setExpanded] = useState({})
+  const [openMovement, setOpenMovement] = useState(null)
   const query = q.trim().toLowerCase()
+
   const byMuscle = useMemo(() => {
     const m = {}
-    for (const mg of MUSCLE_GROUPS) m[mg] = []
     for (const ex of exercises) (m[ex.muscle] ||= []).push(ex)
     return m
   }, [exercises])
+  const toggle = (mg) => setExpanded(e => ({ ...e, [mg]: !e[mg] }))
+  const forceOpen = !!query
 
   return (
     <div className="ce-screen">
@@ -650,7 +670,7 @@ function ExerciseLogbook({ exercises, history, onOpenExercise, onBack }) {
           <SmallChevronLeft color="#FFFFFF" />
         </button>
         <span className="ce-title">Exercises</span>
-        <span className="ce-header-spacer" />
+        <button className="ce-create" onClick={() => onCreate(null)}>Create</button>
       </div>
       <div className="ce-searchbar">
         <div className="ce-search">
@@ -660,27 +680,52 @@ function ExerciseLogbook({ exercises, history, onOpenExercise, onBack }) {
       </div>
       <div className="ce-scroll">
         {MUSCLE_GROUPS.filter(mg => byMuscle[mg]?.length).map(mg => {
-          const list = byMuscle[mg].filter(ex => !query || ex.name.toLowerCase().includes(query))
-          if (!list.length) return null
+          const movements = groupMovements(byMuscle[mg])
+            .filter(mv => !query || mv.name.toLowerCase().includes(query))
+          if (!movements.length) return null
+          const isOpen = forceOpen || !!expanded[mg]
           return (
             <div key={mg}>
-              <div className="ce-group-head"><MuscleIcon muscle={mg} size={40} /><span className="list-name">{mg}</span></div>
-              {list.map(ex => {
-                const sets = variationSetCount(history, ex.id)
+              <button className="ce-group-row" onClick={() => toggle(mg)} aria-expanded={isOpen}>
+                <MuscleIcon muscle={mg} size={60} />
+                <span className="ce-group-text">
+                  <span className="list-name">{mg}</span>
+                  <span className="list-sub">{byMuscle[mg].length} exercise{byMuscle[mg].length === 1 ? '' : 's'}</span>
+                </span>
+                {isOpen ? <ChevronUp color="#111111" /> : <ChevronDown color="#111111" />}
+              </button>
+              {isOpen && movements.map(mv => {
+                const n = mv.variations.length
+                const single = n === 1
                 return (
-                  <button key={ex.id} className="ex-row" onClick={() => onOpenExercise(ex.id)}>
+                  <button key={mv.key} className="ex-row"
+                    onClick={() => single ? onOpenExercise(mv.variations[0].id) : setOpenMovement(mv)}>
+                    <span className="ex-row-badge"><QuestionMark color="#111111" /></span>
                     <span className="ex-row-text">
-                      <span className="ex-row-name">{ex.name}</span>
-                      <span className="ex-row-sub">{detailLineSoft(ex.muscle, ex.equipment)} · {sets} set{sets === 1 ? '' : 's'}</span>
+                      <span className="ex-row-name">{mv.name}</span>
+                      <span className="ex-row-sub">{single ? 'Primary Exercise' : `${n} variations`}</span>
                     </span>
                     <SmallChevronRight color="#111111" />
                   </button>
                 )
               })}
+              {isOpen && (
+                <button className="ex-add-row" onClick={() => onCreate(mg)}>
+                  <span className="ex-add-text">Add a new {mg.toLowerCase()} exercise...</span>
+                  <Plus color="#111111" />
+                </button>
+              )}
             </div>
           )
         })}
       </div>
+
+      {openMovement && (
+        <VariationsSheet movement={openMovement} history={history}
+          onPick={(id) => { setOpenMovement(null); onOpenExercise(id) }}
+          onCreateNew={() => { const m = openMovement.muscle; setOpenMovement(null); onCreate(m) }}
+          onClose={() => setOpenMovement(null)} />
+      )}
     </div>
   )
 }
@@ -948,6 +993,64 @@ function WorkoutSelection({ workouts, exerciseMap, mode, onPick, onRest, onCreat
 // ════════════════════════════════════════════════════════════════════
 //  CREATE A PLAN
 // ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+//  CALENDAR — plan starting-date picker
+// ════════════════════════════════════════════════════════════════════
+// The selected day is a violet circle; today (when it isn't the selected
+// day) gets a small yellow dot above the number.
+const WEEKDAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+
+function Calendar({ value, onSelect }) {
+  const today = new Date()
+  const selected = value ? new Date(value) : today
+  // Which month is on screen — starts on the selected date's month.
+  const [view, setView] = useState({ y: selected.getFullYear(), m: selected.getMonth() })
+  const rows = monthGrid(view.y, view.m)
+  const title = MONTHS_LONG[view.m][0] + MONTHS_LONG[view.m].slice(1).toLowerCase() + ' ' + view.y
+
+  const step = (dir) => {
+    let m = view.m + dir, y = view.y
+    if (m < 0) { m = 11; y-- }
+    if (m > 11) { m = 0; y++ }
+    setView({ y, m })
+  }
+
+  return (
+    <div className="cal">
+      <div className="cal-nav">
+        <button className="cal-arrow" onClick={() => step(-1)} aria-label="Previous month">
+          <SmallChevronLeft color="#111111" />
+        </button>
+        <span className="cal-title">{title}</span>
+        <button className="cal-arrow" onClick={() => step(1)} aria-label="Next month">
+          <SmallChevronRight color="#111111" />
+        </button>
+      </div>
+      <div className="cal-weekdays">
+        {WEEKDAY_LABELS.map(d => <span key={d} className="cal-weekday">{d}</span>)}
+      </div>
+      <div className="cal-grid">
+        {rows.flat().map((date, i) => {
+          if (!date) return <span key={i} className="cal-cell blank" />
+          const isSel = sameDay(date, selected)
+          const isToday = sameDay(date, today)
+          return (
+            <button key={i}
+              className={`cal-cell ${isSel ? 'sel' : ''}`}
+              onClick={() => onSelect(date.toISOString())}>
+              {isToday && !isSel && <span className="cal-today-dot" />}
+              {date.getDate()}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  CREATE / EDIT A PLAN
+// ════════════════════════════════════════════════════════════════════
 function CreatePlan({ draft, workoutsById, exerciseMap, onChange, onPickDay, onSave, onCancel }) {
   const named = draft.name.trim().length > 0
   const nameRef = useRef(null)
@@ -987,6 +1090,12 @@ function CreatePlan({ draft, workoutsById, exerciseMap, onChange, onPickDay, onS
         </div>
 
         <div className="cp-divider" />
+
+        <div className="cp-section">
+          <span className="row-label dark">STARTING DATE</span>
+          <Calendar value={draft.startDate}
+            onSelect={(iso) => onChange({ ...draft, startDate: iso })} />
+        </div>
 
         <div className="cp-section">
           <span className="row-label dark">WORKOUT ROTATION</span>
@@ -1449,6 +1558,60 @@ function ComingSoon({ title, onBack }) {
 // ════════════════════════════════════════════════════════════════════
 //  APP
 // ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+//  SCREEN TRANSITION — slide new screens in from the right; on back,
+//  slide the current one out to the right to reveal the previous.
+// ════════════════════════════════════════════════════════════════════
+function ScreenTransition({ screen, dir, children }) {
+  // Latest rendered node, kept in a ref so the effect can read it without
+  // depending on `children` (which is a new object every render and would
+  // otherwise retrigger the transition constantly).
+  const latest = useRef({ screen, node: children })
+  latest.current = { screen, node: children }
+
+  const [layers, setLayers] = useState({ cur: { screen, node: children }, prev: null, dir })
+  const shownRef = useRef(screen)
+
+  useEffect(() => {
+    if (screen === shownRef.current) {
+      // Same screen, content may have changed — swap in the latest node
+      // without animating.
+      setLayers(l => ({ ...l, cur: { screen, node: children } }))
+      return
+    }
+    const outgoing = layers.cur
+    shownRef.current = screen
+    setLayers({ cur: { screen, node: children }, prev: outgoing, dir })
+    const t = setTimeout(() => setLayers(l => ({ ...l, prev: null })), 340)
+    return () => clearTimeout(t)
+  }, [screen]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep the current layer's node fresh even while a transition is running
+  // (e.g. a set logged mid-animation), without disturbing prev.
+  useEffect(() => {
+    if (screen === shownRef.current) {
+      setLayers(l => l.cur.node === children ? l : { ...l, cur: { screen, node: children } })
+    }
+  }, [children]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const { cur, prev, dir: activeDir } = layers
+  return (
+    <div className="screen-stage">
+      {prev && (
+        <div key={'p-' + prev.screen}
+          className={`screen-layer ${activeDir === 'back' ? 'leaving-back' : 'under'}`}>
+          {prev.node}
+        </div>
+      )}
+      <div key={'c-' + cur.screen}
+        className={`screen-layer ${
+          prev ? (activeDir === 'back' ? 'under' : 'entering-fwd') : ''}`}>
+        {cur.node}
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const initial = useMemo(() => loadState() || freshState(), [])
 
@@ -1460,13 +1623,32 @@ export default function App() {
   const [paused, setPaused] = useState(initial.paused || null)
 
   useEffect(() => {
-    saveState({ exercises, workouts, plan, history, workoutLog, paused })
+    saveState({ exercises, workouts, plan, history, workoutLog, paused, seededWorkouts: true })
   }, [exercises, workouts, plan, history, paused])
 
   const exerciseMap = useMemo(() => Object.fromEntries(exercises.map(e => [e.id, e])), [exercises])
   const workoutsById = useMemo(() => Object.fromEntries(workouts.map(w => [w.id, w])), [workouts])
 
-  const [screen, setScreen] = useState('start')
+  // Navigation with slide direction. `nav.screen` is the live screen;
+  // `nav.dir` is 'forward' (slide in from right) or 'back' (slide out to
+  // the right, revealing the previous screen). A history stack lets us
+  // tell which way we're going without changing the 49 call sites: going
+  // to a screen already below us on the stack is a "back".
+  const [nav, setNav] = useState({ screen: 'start', dir: 'forward', stack: ['start'] })
+  const screen = nav.screen
+  const setScreen = (next) => {
+    setNav(prev => {
+      if (next === prev.screen) return prev
+      const idx = prev.stack.lastIndexOf(next)
+      if (idx !== -1 && idx < prev.stack.length - 1) {
+        // Going back to a screen we came from — pop to it.
+        return { screen: next, dir: 'back', stack: prev.stack.slice(0, idx + 1) }
+      }
+      // New destination — push it.
+      return { screen: next, dir: 'forward', stack: [...prev.stack, next] }
+    })
+  }
+  let content = null
   const [activeWorkoutId, setActiveWorkoutId] = useState(null)
   const [sessionItems, setSessionItems] = useState([])
   const [exIdx, setExIdx] = useState(0)
@@ -1481,6 +1663,7 @@ export default function App() {
   const [planDraft, setPlanDraft] = useState(null)
   const [planSlotIdx, setPlanSlotIdx] = useState(null)
   const [presetMuscle, setPresetMuscle] = useState(null)
+  const [configureReturn, setConfigureReturn] = useState('chooseExercise')
   const [optionsWorkoutId, setOptionsWorkoutId] = useState(null)
   const [showPlanOptions, setShowPlanOptions] = useState(false)
   const [pickerMode, setPickerMode] = useState(null)
@@ -1534,6 +1717,8 @@ export default function App() {
       id: uid(), name: '', days: PLAN_DEFAULT_DAYS,
       // undefined = not chosen yet (empty), null = explicit Rest day.
       slots: Array(PLAN_DEFAULT_DAYS).fill(undefined),
+      // The plan's rotation starts on this calendar date; defaults to today.
+      startDate: new Date().toISOString(),
     })
     setScreen('createPlan')
   }
@@ -1544,7 +1729,8 @@ export default function App() {
     setScreen('createPlan')
   }
   const savePlan = () => {
-    setPlan({ ...planDraft, name: planDraft.name.trim(), startDate: plan?.startDate || new Date().toISOString() })
+    setPlan({ ...planDraft, name: planDraft.name.trim(),
+      startDate: planDraft.startDate || new Date().toISOString() })
     setPlanDraft(null); setScreen('start')
   }
   const pickForSlot = (i) => {
@@ -1572,7 +1758,10 @@ export default function App() {
     const nx = { id: uid(), ...ex }
     setExercises(prev => [...prev, nx])
     setPresetMuscle(null)
-    handlePick(nx.id)
+    // From the library (My Exercises) creation just adds it and returns
+    // there; from a workout-building flow it also picks the new exercise.
+    if (configureReturn === 'exerciseLog') setScreen('exerciseLog')
+    else handlePick(nx.id)
   }
 
   // ── running a workout ──
@@ -1661,7 +1850,7 @@ export default function App() {
   // ── render ──
   const optionsWorkout = optionsWorkoutId ? workoutsById[optionsWorkoutId] : null
 
-  if (screen === 'start') return (
+  if (screen === 'start') content = (
     <>
       <StartPage plan={plan} workoutsById={workoutsById} exerciseMap={exerciseMap}
         pausedWorkoutId={paused?.workoutId ?? null}
@@ -1687,7 +1876,7 @@ export default function App() {
     </>
   )
 
-  if (screen === 'selection') return (
+  if (screen === 'selection') content = (
     <>
       <WorkoutSelection workouts={workouts} exerciseMap={exerciseMap} mode={selectMode}
         onPick={(wid) => {
@@ -1717,13 +1906,13 @@ export default function App() {
     </>
   )
 
-  if (screen === 'createPlan' && planDraft) return (
+  if (screen === 'createPlan' && planDraft) content = (
     <CreatePlan draft={planDraft} workoutsById={workoutsById} exerciseMap={exerciseMap}
       onChange={setPlanDraft} onPickDay={pickForSlot} onSave={savePlan}
       onCancel={() => { setPlanDraft(null); setScreen('start') }} />
   )
 
-  if (screen === 'createWorkout') return (
+  if (screen === 'createWorkout') content = (
     <CreateWorkout draft={draft} exerciseMap={exerciseMap} editing={!!editingWorkoutId}
       onNameChange={(name) => setDraft(d => ({ ...d, name }))}
       onItemsChange={(items) => setDraft(d => ({ ...d, items }))}
@@ -1735,25 +1924,25 @@ export default function App() {
       }} />
   )
 
-  if (screen === 'chooseExercise') return (
+  if (screen === 'chooseExercise') content = (
     <ChooseExercise exercises={exercises} history={history} onPick={handlePick}
-      onCreateNew={(m) => { setPresetMuscle(m); setScreen('configureExercise') }}
+      onCreateNew={(m) => { setPresetMuscle(m); setConfigureReturn('chooseExercise'); setScreen('configureExercise') }}
       onBack={pickerBack} />
   )
 
-  if (screen === 'historyPicker') return (
+  if (screen === 'historyPicker') content = (
     <ChooseExercise exercises={exercises} history={history} title="Exercise History"
       onPick={(exId) => { setHistoryExId(exId); setHistoryReturn('historyPicker'); setScreen('history') }}
-      onCreateNew={(m) => { setPresetMuscle(m); setScreen('configureExercise') }}
+      onCreateNew={(m) => { setPresetMuscle(m); setConfigureReturn('historyPicker'); setScreen('configureExercise') }}
       onBack={() => setScreen('start')} />
   )
 
-  if (screen === 'configureExercise') return (
+  if (screen === 'configureExercise') content = (
     <ConfigureExercise presetMuscle={presetMuscle} onSave={createdExercise}
-      onBack={() => { setPresetMuscle(null); setScreen('chooseExercise') }} />
+      onBack={() => { setPresetMuscle(null); setScreen(configureReturn) }} />
   )
 
-  if (screen === 'plan' && activeWorkout) return (
+  if (screen === 'plan' && activeWorkout) content = (
     <TodaysPlan workoutName={activeWorkout.name} items={sessionItems}
       exerciseMap={exerciseMap} onChange={setSessionItems}
       onAdd={() => openPicker('plan')}
@@ -1764,24 +1953,24 @@ export default function App() {
   if (screen === 'logging' && activeWorkout) {
     const it = sessionItems[exIdx]
     const ex = it ? exerciseMap[it.exId] : null
-    if (!ex) return null
-    return (
+    content = ex ? (
       <LoggingScreen key={ex.id}
         exercise={ex} exIdx={exIdx} items={sessionItems}
         sets={loggedSets[it.slotId] || []} doneFlags={doneFlags}
         goalReps={it.reps} lastTime={lastSessionSets(history, ex.id)}
         isLastRemaining={remainingAfterThis === 0}
-        swapOptions={exercises.filter(e => e.muscle === ex.muscle && e.id !== ex.id)}
+        swapOptions={exercises.filter(e => e.muscle === ex.muscle)}
+        swapHistory={history}
         onAddSet={addSet} onEditSet={editSet}
         onSwap={swapCurrent} onCreateSwap={() => openPicker('swap')}
         onGo={(i) => { if (i >= 0 && i < sessionItems.length) setExIdx(i) }}
         onNext={nextExercise} onPause={pauseWorkout}
         onHistory={() => { setHistoryExId(ex.id); setHistoryReturn('logging'); setScreen('history') }}
         onPlan={() => setScreen('planDuring')} />
-    )
+    ) : null
   }
 
-  if (screen === 'planDuring' && activeWorkout) return (
+  if (screen === 'planDuring' && activeWorkout) content = (
     <TodaysPlan workoutName={activeWorkout.name} items={sessionItems}
       exerciseMap={exerciseMap} onChange={setSessionItems}
       onAdd={() => openPicker('plan')} ctaLabel="Back to Workout" currentIdx={exIdx}
@@ -1792,29 +1981,30 @@ export default function App() {
       onBack={() => setScreen('logging')} />
   )
 
-  if (screen === 'history' && historyExId) return (
+  if (screen === 'history' && historyExId) content = (
     <ExerciseHistory exercise={exerciseMap[historyExId]}
       sessions={exerciseSessions(history, historyExId)}
       onBack={() => setScreen(historyReturn)} />
   )
 
-  if (screen === 'workoutLog') return (
-    <WorkoutLogbook log={workoutLog}
-      onOpen={(entry) => { setOpenLogEntry(entry); setScreen('workoutLogDetail') }}
+  if (screen === 'workoutLog') content = (
+    <WorkoutLogbook workouts={workouts} exerciseMap={exerciseMap}
+      onStart={(wid) => startToday(wid)}
       onBack={() => setScreen('start')} />
   )
 
-  if (screen === 'workoutLogDetail' && openLogEntry) return (
+  if (screen === 'workoutLogDetail' && openLogEntry) content = (
     <WorkoutLogDetail entry={openLogEntry} onBack={() => setScreen('workoutLog')} />
   )
 
-  if (screen === 'exerciseLog') return (
+  if (screen === 'exerciseLog') content = (
     <ExerciseLogbook exercises={exercises} history={history}
+      onCreate={(m) => { setPresetMuscle(m); setConfigureReturn('exerciseLog'); setScreen('configureExercise') }}
       onOpenExercise={(exId) => { setHistoryExId(exId); setHistoryReturn('exerciseLog'); setScreen('history') }}
       onBack={() => setScreen('start')} />
   )
 
-  if (screen === 'quickAdd' && activeWorkout) return (
+  if (screen === 'quickAdd' && activeWorkout) content = (
     <TodaysPlan workoutName="Quick Add" eyebrow="Extra Exercises"
       items={quickAddIds.map(id => makeItem(id))} exerciseMap={exerciseMap}
       onChange={(items) => setQuickAddIds(items.map(i => i.exId))}
@@ -1822,11 +2012,15 @@ export default function App() {
       onGo={commitQuickAdd} onBack={() => setScreen('complete')} />
   )
 
-  if (screen === 'complete' && activeWorkout) return (
+  if (screen === 'complete' && activeWorkout) content = (
     <WorkoutComplete items={sessionItems} exerciseMap={exerciseMap} loggedSets={loggedSets}
       onAddMore={() => { setQuickAddIds([]); setScreen('quickAdd') }}
       onDone={finishWorkout} />
   )
 
-  return null
+  return (
+    <ScreenTransition screen={screen} dir={nav.dir}>
+      {content}
+    </ScreenTransition>
+  )
 }
