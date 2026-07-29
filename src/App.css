@@ -120,13 +120,14 @@ input, textarea { font-family: inherit; }
 
 .logbook-row { display: flex; gap: 12px; margin-top: 16px; }
 .logbook-btn {
-  flex: 1; height: 48px; border-radius: 8px; cursor: pointer;
-  background: var(--white); color: var(--ink); border: 2px solid transparent;
+  flex: 1; height: 48px; border-radius: 0; cursor: pointer;
+  background: var(--white); color: var(--ink);
+  border: none; border-left: 8px solid transparent;
   font-size: 14px; font-weight: 800; font-family: 'Inter', sans-serif;
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.logbook-btn.violet { border-color: var(--violet); }
-.logbook-btn.coral  { border-color: var(--coral); }
+.logbook-btn.violet { border-left-color: var(--violet); }
+.logbook-btn.coral  { border-left-color: var(--coral); }
 
 /* ── Zero-state CTA row: create-plan pill + yellow quickstart ── */
 .start-cta-row {
@@ -161,7 +162,7 @@ input, textarea { font-family: inherit; }
   display: flex; flex-direction: column;
 }
 .plan-panel-kebab {
-  align-self: flex-start; background: none; border: none; cursor: pointer; padding: 0;
+  align-self: flex-end; background: none; border: none; cursor: pointer; padding: 0;
   display: flex; margin-bottom: 8px;
 }
 .active-badge {
@@ -194,12 +195,13 @@ input, textarea { font-family: inherit; }
 
 /* ── Today's workout card inside the plan panel ── */
 .today-card {
-  background: var(--white); border: 2px solid var(--violet); border-radius: 0;
-  margin-top: 16px; padding: 16px; display: flex; flex-direction: column; gap: 16px;
+  background: var(--white); border: none; border-left: 8px solid var(--violet);
+  border-radius: 0; margin-top: 16px; padding: 16px;
+  display: flex; flex-direction: column; gap: 16px;
 }
 .today-card.rest { align-items: center; justify-content: center; padding: 28px 16px; }
 .today-rest-label { font-family: 'Gabarito','Inter',sans-serif; color: var(--muted); font-size: 15px; }
-.today-card-top { display: flex; align-items: center; gap: 12px; }
+.today-card-top { display: flex; align-items: flex-start; gap: 12px; }
 .today-cal {
   width: 44px; height: 46px; border-radius: 8px; overflow: hidden; flex-shrink: 0;
   border: 2px solid var(--violet); background: var(--white);
