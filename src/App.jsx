@@ -10,18 +10,17 @@ import {
   workoutMuscles, workoutSummaryLine, formatHistoryDate,
   loadState, saveState, freshState, lastSessionSets, exerciseSessions,
   groupMovements, variationSetCount, recordCompletedWorkout, movementKey,
-  sessionSummaryLine, workoutHistory,
+  sessionSummaryLine, workoutHistory, planStats,
 } from './data.js'
 import { muscleIcon } from './assets/muscleGraphics.js'
 import planBodyArt from './assets/plan-body.svg'
-import homeGraphic from './assets/HomepageGraphic.png'
-import homeBg from './assets/HomepageChest.png'
+import homeBg from './assets/HomepageImage.png'
 import {
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Edit, History, Pause, ArrowRight,
   SmallChevronLeft, SmallChevronRight, SmallChevronUp, SmallChevronDown,
   Share, Close, KebabMenu, Trash, Swap, List, Search, Check,
-  AddExercise, Book, Gear, Dumbbell, QuestionMark, Quickstart,
+  AddExercise, Book, Gear, Dumbbell, QuestionMark, Quickstart, Streak,
 } from './icons.jsx'
 
 const uid = () => Math.random().toString(36).slice(2, 9)
@@ -818,7 +817,7 @@ function TodaysPlan({ workoutName, items, exerciseMap, onGo, onBack, onChange, o
       <img className="plan-body-art" src={planBodyArt} alt="" aria-hidden="true" />
       <div className={`plan-content ${sel != null ? 'with-controls' : ''}`}>
         <button className="plan-back" onClick={onBack} aria-label="Back">
-          <ChevronLeft color="#6C5CE7" />
+          <ChevronLeft color="#426E8F" />
         </button>
         <div className="plan-head">
           <p className="plan-eyebrow">{eyebrow}</p>
@@ -877,70 +876,75 @@ function TodaysPlan({ workoutName, items, exerciseMap, onGo, onBack, onChange, o
 // ════════════════════════════════════════════════════════════════════
 //  START PAGE
 // ════════════════════════════════════════════════════════════════════
-function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId,
+function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId, workoutLog,
   onStartWorkout, onCreatePlan, onStartToday, onResume, onHistory,
   onPlanOptions, onWorkbook, onExercises, onSettings }) {
   const todayWorkoutId = planTodayWorkoutId(plan)
   const todayWorkout = todayWorkoutId ? workoutsById[todayWorkoutId] : null
   const isPausedToday = todayWorkout && pausedWorkoutId === todayWorkoutId
   const now = new Date()
-  const dayIdx = plan ? planDayIndex(plan) : 0
+  const stats = planStats(plan, workoutLog)
 
   return (
     <div className="start-screen">
-      {/* Full-bleed anatomy backdrop behind everything. */}
       <img className="start-bg" src={homeBg} alt="" aria-hidden="true" />
 
       <div className="start-top">
+        <span className="gf-logo">GoodFail</span>
         <div className="start-toolbar">
+          <button className="tool-btn" onClick={onWorkbook} aria-label="My workouts">
+            <Book color="#426E8F" />
+          </button>
+          <button className="tool-btn" onClick={onExercises} aria-label="Exercises">
+            <Dumbbell color="#CF2A0F" />
+          </button>
           <button className="tool-btn" onClick={onSettings} aria-label="Settings">
             <Gear color="#111111" />
           </button>
         </div>
-
-        {/* Wordmark is white against the backdrop now. */}
-        <div className="overload-stack">
-          <span className="ol-front white">OVERLOAD</span>
-        </div>
-
-        <div className="logbook-row">
-          <button className="logbook-btn violet" onClick={onWorkbook}>
-            <Book color="#111111" /> Workouts
-          </button>
-          <button className="logbook-btn coral" onClick={onExercises}>
-            <Dumbbell color="#111111" /> Exercises
-          </button>
-        </div>
       </div>
 
-      {/* Bottom region: the active plan panel, or the create/quickstart
-          row when there's no plan yet. */}
       {plan ? (
-        <div className="plan-panel">
-          <button className="plan-panel-kebab" onClick={onPlanOptions} aria-label="Plan options">
-            <KebabMenu color="#111111" />
+        <div className="plan-sheet">
+          {/* Quickstart floats just above the sheet's top edge. */}
+          <button className="plan-quickstart" onClick={onStartWorkout} aria-label="Quickstart a workout">
+            <Quickstart color="#111111" />
           </button>
-          <span className="active-badge">ACTIVE</span>
-          <p className="plan-panel-label">YOUR WORKOUT PLAN</p>
-          <h2 className="plan-panel-name">{plan.name}</h2>
-          <div className="plan-days">
-            {Array.from({ length: plan.days }, (_, i) => {
-              const state = i < dayIdx ? 'done' : i === dayIdx ? 'today' : 'future'
-              return (
-                <span key={i} className={`plan-day ${state}`}>
-                  {i === dayIdx && <span className="plan-day-dot" />}
-                  {i + 1}
-                </span>
-              )
-            })}
+          <div className="plan-sheet-head">
+            <div className="plan-sheet-titles">
+              <h2 className="plan-sheet-name">{plan.name}</h2>
+              <p className="plan-sheet-sub">
+                {plan.days} DAY ROTATION • {stats.totalDays} DAY PLAN
+              </p>
+            </div>
+            <button className="plan-sheet-kebab" onClick={onPlanOptions} aria-label="Plan options">
+              <KebabMenu color="#111111" />
+            </button>
           </div>
 
-          {/* Today's workout card. */}
+          <div className="plan-stats">
+            <div className="plan-stat">
+              <Streak color="#CF2A0F" size={22} />
+              <span className="plan-stat-num">{stats.streak}</span>
+            </div>
+            <div className="plan-stat">
+              <span className="plan-ring" style={{
+                background: `conic-gradient(var(--violet) ${stats.pct * 3.6}deg, #EBEBEB 0deg)` }}>
+                <span className="plan-ring-inner">{stats.pct}%</span>
+              </span>
+              <span className="plan-stat-num">{stats.dayNumber}/{stats.totalDays}</span>
+            </div>
+            <div className="plan-stat">
+              <span className="plan-stat-fbadge">F</span>
+              <span className="plan-stat-num">{stats.failures}</span>
+            </div>
+          </div>
+
           {todayWorkout ? (
             <div className="today-card">
               <div className="today-card-top">
                 <span className="today-cal">
-                  <span className="today-cal-strip" />
+                  <span className="today-cal-strip">{MONTHS_SHORT[now.getMonth()]}</span>
                   <span className="today-cal-day">{now.getDate()}</span>
                 </span>
                 <span className="today-card-text">
@@ -971,7 +975,7 @@ function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId,
             CREATE A WORKOUT PLAN <ArrowRight />
           </button>
           <button className="start-quickstart" onClick={onStartWorkout} aria-label="Quickstart a workout">
-            <Quickstart color="#FFFFFF" />
+            <Quickstart color="#111111" />
           </button>
         </div>
       )}
@@ -1918,7 +1922,7 @@ export default function App() {
   if (screen === 'start') content = (
     <>
       <StartPage plan={plan} workoutsById={workoutsById} exerciseMap={exerciseMap}
-        pausedWorkoutId={paused?.workoutId ?? null}
+        pausedWorkoutId={paused?.workoutId ?? null} workoutLog={workoutLog}
         onStartWorkout={() => { setSelectMode('start'); setPlanSlotIdx(null); setScreen('selection') }}
         onCreatePlan={startCreatePlan}
         onStartToday={startToday} onResume={resumeWorkout}

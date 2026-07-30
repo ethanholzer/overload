@@ -8,11 +8,16 @@
   --cream-dk:   #E2E2E2;
   --sage:       #C3D5C0;
   --sage-dk:    #A8BFA4;
-  --violet:     #6C5CE7;
-  --violet-dk:  #5346C4;
-  --violet-lt:  #AAA2E7;
-  --coral:      #F0573F;
-  --coral-dk:   #D2452F;
+  /* "violet" is now the navy brand color used across plan/workout UI. */
+  --violet:     #426E8F;
+  --violet-dk:  #365B78;
+  --violet-lt:  #A0B6C6;
+  /* RPE + Failure markers keep the original purple. */
+  --rpe:        #6C5CE7;
+  --rpe-dk:     #5346C4;
+  --rpe-lt:     #AAA2E7;
+  --coral:      #CF2A0F;
+  --coral-dk:   #BE5342;
   --mustard:    #F5B82E;
   --mustard-dk: #E0A416;
   --green:      #3DBB6E;
@@ -103,39 +108,24 @@ input, textarea { font-family: inherit; }
 }
 .start-top {
   position: relative; z-index: 2; flex-shrink: 0; padding: 62px 20px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
-.start-toolbar { display: flex; justify-content: flex-end; gap: 12px; }
+/* GoodFail wordmark, white against the photo. */
+.gf-logo {
+  font-family: 'League Gothic', sans-serif; font-size: 48px; line-height: 48px;
+  color: var(--white); white-space: nowrap;
+}
+.start-toolbar { display: flex; gap: 10px; }
 .tool-btn {
   width: 48px; height: 48px; border-radius: 8px; border: none; cursor: pointer; padding: 0;
   background: var(--white); display: flex; align-items: center; justify-content: center;
 }
-
-.overload-stack { position: relative; height: 88px; margin-top: 32px; }
-.ol-front {
-  position: absolute; left: 0; top: 0;
-  font-family: 'League Gothic', sans-serif; font-size: 120px; line-height: 88px;
-  text-transform: uppercase; white-space: nowrap;
-}
-.ol-front.white { color: var(--white); }
-
-.logbook-row { display: flex; gap: 12px; margin-top: 16px; }
-.logbook-btn {
-  flex: 1; height: 48px; border-radius: 0; cursor: pointer;
-  background: var(--white); color: var(--ink);
-  border: none; border-left: 8px solid transparent;
-  font-size: 14px; font-weight: 800; font-family: 'Inter', sans-serif;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.logbook-btn.violet { border-left-color: var(--violet); }
-.logbook-btn.coral  { border-left-color: var(--coral); }
 
 /* ── Zero-state CTA row: create-plan pill + yellow quickstart ── */
 .start-cta-row {
   position: relative; z-index: 2; margin-top: auto;
   display: flex; align-items: flex-end; gap: 16px; padding: 16px 16px 40px;
 }
-/* A dark gradient rising from the bottom keeps the CTAs legible over
-   the busy backdrop. */
 .start-cta-scrim {
   position: absolute; left: 0; right: 0; bottom: 0; height: 320px; z-index: -1;
   background: linear-gradient(to top, rgba(17,17,17,0.92) 30%, rgba(17,17,17,0) 100%);
@@ -154,48 +144,53 @@ input, textarea { font-family: inherit; }
   display: flex; align-items: center; justify-content: center;
 }
 
-/* ── Active-plan panel: frosted shelf anchored to the bottom ── */
-.plan-panel {
+/* ── Active-plan sheet: solid white card anchored to the bottom ── */
+.plan-sheet {
   position: relative; z-index: 2; margin-top: auto;
-  background: rgba(235,235,235,0.92); backdrop-filter: blur(8px);
-  border-top: 2px solid var(--ink); padding: 16px 16px 40px;
-  display: flex; flex-direction: column;
+  background: var(--white); border-top: 2px solid var(--ink);
+  padding: 20px 16px 40px; display: flex; flex-direction: column;
 }
-.plan-panel-kebab {
-  align-self: flex-end; background: none; border: none; cursor: pointer; padding: 0;
-  display: flex; margin-bottom: 8px;
-}
-.active-badge {
-  align-self: flex-start; background: var(--green); color: var(--white);
-  border-radius: 8px; padding: 4px 8px; font-size: 11px; font-weight: 700;
-}
-.plan-panel-label { font-size: 11px; font-weight: 700; color: var(--step-txt); margin-top: 12px; }
-.plan-panel-name {
-  font-size: 40px; line-height: 44px; font-weight: 900; color: #000000;
-  letter-spacing: -1px; margin-top: 6px;
-}
-
-.plan-days { display: flex; gap: 4px; margin-top: 16px; }
-.plan-day {
-  position: relative; flex: 1; height: 64px; border-radius: 8px;
+/* Quickstart sits on the photo just above the sheet's top edge. */
+.plan-quickstart {
+  position: absolute; top: -76px; right: 16px;
+  width: 64px; height: 64px; border-radius: 1000px; cursor: pointer;
+  background: var(--mustard); border: none;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 700;
 }
-/* Completed days: solid violet. Future days: violet-light. */
-.plan-day.done   { background: var(--violet); color: var(--white); }
-.plan-day.future { background: var(--violet-lt); color: var(--white); }
-/* Today: white fill, 2px violet outline, violet number, yellow dot above. */
-.plan-day.today {
-  background: var(--white); border: 2px solid var(--violet); color: var(--violet);
+.plan-sheet-head { display: flex; align-items: flex-start; gap: 12px; }
+.plan-sheet-titles { flex: 1; min-width: 0; }
+.plan-sheet-name {
+  font-size: 40px; line-height: 44px; font-weight: 900; color: #000000;
+  letter-spacing: -1px; overflow-wrap: anywhere;
 }
-.plan-day-dot {
-  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
-  width: 6px; height: 6px; border-radius: 999px; background: var(--mustard);
+.plan-sheet-sub { font-size: 11px; font-weight: 700; color: #1C1C1C; margin-top: 6px; }
+.plan-sheet-kebab { background: none; border: none; cursor: pointer; padding: 0; display: flex; flex-shrink: 0; }
+
+/* Stats row: streak, day-progress ring, failure count. */
+.plan-stats { display: flex; gap: 12px; margin-top: 16px; }
+.plan-stat {
+  height: 48px; padding: 0 12px; border: 2px solid #EBEBEB; border-radius: 4px;
+  display: flex; align-items: center; gap: 8px;
+}
+.plan-stat-num { font-size: 14px; font-weight: 800; color: var(--ink); }
+.plan-ring {
+  width: 32px; height: 32px; border-radius: 999px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.plan-ring-inner {
+  width: 26px; height: 26px; border-radius: 999px; background: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 800; color: #000000;
+}
+.plan-stat-fbadge {
+  width: 28px; height: 28px; border-radius: 4px; background: var(--rpe); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
 }
 
-/* ── Today's workout card inside the plan panel ── */
+/* ── Today's workout card inside the plan sheet ── */
 .today-card {
-  background: var(--white); border: none; border-left: 8px solid var(--violet);
+  background: #EBEBEB; border: none; border-left: 8px solid var(--violet);
   border-radius: 0; margin-top: 16px; padding: 16px;
   display: flex; flex-direction: column; gap: 16px;
 }
@@ -207,7 +202,10 @@ input, textarea { font-family: inherit; }
   border: 2px solid var(--violet); background: var(--white);
   display: flex; flex-direction: column; align-items: center;
 }
-.today-cal-strip { width: 100%; height: 16px; background: var(--violet); flex-shrink: 0; }
+.today-cal-strip {
+  width: 100%; height: 16px; background: var(--violet); color: var(--white);
+  font-size: 8px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+}
 .today-cal-day {
   flex: 1; display: flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 900; color: var(--ink);
@@ -475,8 +473,8 @@ input, textarea { font-family: inherit; }
 /* ═══ TODAY'S PLAN ═══════════════════════════════════════════════════ */
 .plan-screen { background: var(--violet); }
 .plan-body-art {
-  position: absolute; left: 178px; top: 16px; width: 215px; height: 821px;
-  pointer-events: none; user-select: none;
+  position: absolute; left: 178px; top: 16px; width: 426px; height: 821px;
+  pointer-events: none; user-select: none; z-index: 0;
 }
 .plan-content {
   position: relative; z-index: 1; padding: 38px 20px 24px;
@@ -498,7 +496,7 @@ input, textarea { font-family: inherit; }
 .plan-row { display: flex; align-items: center; gap: 14px; min-height: 52px; }
 .plan-num {
   width: 28px; height: 28px; flex-shrink: 0; border-radius: 999px;
-  background: rgba(17,17,17,0.08); color: var(--white);
+  background: var(--violet-dk); color: var(--white);
   font-size: 14px; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
 }
@@ -506,17 +504,20 @@ input, textarea { font-family: inherit; }
 .plan-num.current { background: var(--mustard); color: var(--ink); }
 .plan-pill {
   display: inline-flex; align-items: center; min-height: 52px; padding: 12px 16px;
-  border-radius: 0; background: var(--coral); border: none;
-  border-left: 8px solid var(--white);
+  border-radius: 0; background: var(--cream); border: none;
+  border-left: 8px solid var(--coral-dk);
   max-width: calc(100% - 42px); cursor: pointer; text-align: left;
 }
+/* Selected: the whole card goes white and loses the red edge so it
+   reads as the active row. */
 .plan-pill.sel { background: var(--white); border-left-color: var(--white); }
-.plan-pill.sel .plan-pill-name { color: var(--ink); }
 .plan-pill.add {
   background: transparent; border: 2px dashed rgba(255,255,255,0.5);
   border-radius: 0; gap: 8px; justify-content: space-between;
 }
-.plan-pill-name { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; color: var(--white); overflow-wrap: anywhere; }
+.plan-pill .plan-pill-name { color: var(--ink); }
+.plan-pill.add .plan-pill-name { color: var(--white); }
+.plan-pill-name { font-size: 17px; font-weight: 900; letter-spacing: -0.3px; color: var(--ink); overflow-wrap: anywhere; }
 .plan-footer {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
   background: var(--violet); padding: 12px 20px 32px; display: flex; flex-direction: column;
@@ -635,14 +636,14 @@ input, textarea { font-family: inherit; }
 /* RPE tag: white pill, 1px violet border, r4, violet-light text. */
 .sc-tag {
   display: inline-flex; align-items: center; height: 28px; padding: 4px 10px;
-  border-radius: 4px; background: var(--white); border: 1px solid var(--violet);
-  font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--violet-lt);
+  border-radius: 4px; background: var(--white); border: 1px solid var(--rpe);
+  font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--rpe-lt);
 }
 .sc-tag.failure {
-  background: var(--violet); color: var(--white); border-color: var(--violet);
+  background: var(--rpe); color: var(--white); border-color: var(--rpe);
   min-width: 28px; justify-content: center;
 }
-.sc-tag.add-rpe { background: transparent; color: var(--violet); border: 1px dashed var(--violet); font-weight: 800; }
+.sc-tag.add-rpe { background: transparent; color: var(--rpe); border: 1px dashed var(--rpe); font-weight: 800; }
 
 .next-bar {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
@@ -790,13 +791,13 @@ input, textarea { font-family: inherit; }
   background: var(--white); box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
 .feel-knob.failure::before {
-  width: 64px; height: 64px; background: var(--violet); box-shadow: none;
+  width: 64px; height: 64px; background: var(--rpe); box-shadow: none;
 }
 .feel-knob-label {
   position: relative; z-index: 1;
   font-size: 19px; font-weight: 700; color: var(--ink); line-height: 1;
 }
-.feel-knob.failure .feel-knob-label { color: var(--violet-dk); }
+.feel-knob.failure .feel-knob-label { color: var(--rpe-dk); }
 
 .sw-footer { display: flex; justify-content: flex-end; padding-top: 20px; }
 .done-btn {

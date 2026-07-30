@@ -191,6 +191,34 @@ export function workoutHistory(log, workoutId) {
   return (log || []).filter(e => e.workoutId === workoutId)
 }
 
+// Dashboard stats for the active plan card. Values are derived from the
+// workout log and the plan's start date:
+//  - streak: completed workouts logged since the plan started
+//  - dayNumber / totalDays: elapsed days out of the plan's length
+//  - failures: total sets taken to failure across the plan
+// (planLength is a placeholder until an end-date setting exists; we use
+// the rotation length × a default number of cycles.)
+export function planStats(plan, log) {
+  if (!plan) return { streak: 0, dayNumber: 0, totalDays: 0, pct: 0, failures: 0 }
+  const startMs = plan.startDate ? midnight(plan.startDate) : midnight(new Date())
+  const elapsed = Math.max(0, Math.floor((midnight(new Date()) - startMs) / DAY_MS)) + 1
+  const totalDays = plan.totalDays || plan.days * 8
+  const dayNumber = Math.min(elapsed, totalDays)
+  const pct = totalDays > 0 ? Math.round((dayNumber / totalDays) * 100) : 0
+
+  // Sessions logged on or after the plan start, tallied for streak +
+  // failure count.
+  const since = (log || []).filter(e => midnight(e.date) >= startMs)
+  const streak = since.length
+  let failures = 0
+  for (const e of since) {
+    for (const ex of e.exercises) {
+      for (const s of ex.sets) if (!s.isWarmup && isFailure(s.rpe)) failures += 1
+    }
+  }
+  return { streak, dayNumber, totalDays, pct, failures }
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // SEED EXERCISE LIBRARY
 // ═══════════════════════════════════════════════════════════════════
