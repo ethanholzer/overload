@@ -14,8 +14,8 @@ import {
 } from './data.js'
 import { muscleIcon } from './assets/muscleGraphics.js'
 import planBodyArt from './assets/plan-body.svg'
-import homeBgDefault from './assets/HomepageDefault.png'
-import homeBgActive from './assets/HomepageActivePlan.png'
+import homeBgDefault from './assets/HomepageDefault.jpg'
+import homeBgActive from './assets/HomepageActivePlan.jpg'
 import {
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Edit, History, Pause, ArrowRight,

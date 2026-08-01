@@ -400,15 +400,15 @@ input, textarea { font-family: inherit; }
 /* ═══ ADD EXERCISE ═══════════════════════════════════════════════════ */
 .ce-screen { background: var(--white); display: flex; flex-direction: column; }
 .ce-header {
-  flex-shrink: 0; background: var(--cream); padding: 62px 16px 16px;
+  position: relative; flex-shrink: 0; background: var(--cream); padding: 62px 16px 16px;
   border-bottom: 2px solid var(--ink);
-  display: flex; align-items: center; gap: 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
 .hdr-back.white { background: var(--coral); }
 .hdr-back.white svg path { fill: var(--white); }
 .ce-title {
-  flex: 1; text-align: center; font-size: 18px; font-weight: 700; color: var(--ink);
-  text-transform: uppercase; letter-spacing: 0.3px;
+  position: absolute; left: 0; right: 0; text-align: center; font-size: 18px; font-weight: 700; color: var(--ink);
+  pointer-events: none;
 }
 .ce-create {
   height: 48px; padding: 0 16px; border: none; cursor: pointer; border-radius: 1000px;
@@ -900,13 +900,13 @@ input, textarea { font-family: inherit; }
 
 /* ─── compact centred header with a Create button ─── */
 .sel-header {
-  flex-shrink: 0; background: var(--cream);
-  padding: 62px 16px 16px; display: flex; align-items: center; gap: 12px;
+  position: relative; flex-shrink: 0; background: var(--cream);
+  padding: 62px 16px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
   border-bottom: 2px solid var(--ink);
 }
 .sel-title {
-  flex: 1; text-align: center; color: var(--ink);
-  font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+  position: absolute; left: 0; right: 0; text-align: center; color: var(--ink);
+  font-size: 18px; font-weight: 700; pointer-events: none;
 }
 .sel-create {
   min-width: 84px; height: 48px; padding: 0 16px; border: none; cursor: pointer;
@@ -993,8 +993,8 @@ input, textarea { font-family: inherit; }
 /* Compact header: violet round back, centred title, violet Create pill.
    White variant is used on History/Details. */
 .mw-header {
-  flex-shrink: 0; background: var(--cream); border-bottom: 2px solid var(--ink);
-  padding: 62px 16px 16px; display: flex; align-items: center; gap: 12px;
+  position: relative; flex-shrink: 0; background: var(--cream); border-bottom: 2px solid var(--ink);
+  padding: 62px 16px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .mw-header.white { background: var(--white); }
 .mw-back {
@@ -1003,7 +1003,8 @@ input, textarea { font-family: inherit; }
   display: flex; align-items: center; justify-content: center;
 }
 .mw-title {
-  flex: 1; text-align: center; font-size: 18px; font-weight: 700; color: var(--ink);
+  position: absolute; left: 0; right: 0; text-align: center;
+  font-size: 18px; font-weight: 700; color: var(--ink); pointer-events: none;
 }
 .mw-create {
   min-width: 79px; height: 48px; padding: 0 16px; border: none; cursor: pointer;
@@ -1237,3 +1238,8 @@ input, textarea { font-family: inherit; }
   .screen-layer.entering-fwd, .screen-layer.leaving-back,
   .sheet, .sheet-overlay { animation-duration: 0.01ms; }
 }
+
+/* Header buttons sit above the absolutely-centered title. */
+.mw-back, .mw-create, .mw-header-spacer,
+.sel-header .hdr-back, .sel-create, .sel-header-spacer,
+.ce-header .hdr-back, .ce-create, .ce-header-spacer { position: relative; z-index: 1; }
