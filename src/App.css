@@ -31,6 +31,14 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Lock the page to the viewport: the app frame stays put and only the
+   designated inner areas scroll. */
+html, body, #root {
+  height: 100%; height: 100dvh; overflow: hidden;
+  position: fixed; inset: 0; width: 100%;
+  overscroll-behavior: none;
+}
+
 body {
   font-family: 'Inter', -apple-system, system-ui, sans-serif;
   background: #E5E1DA;
@@ -50,8 +58,10 @@ input, textarea { font-family: inherit; }
 .log-book-screen, .mw-screen {
   position: relative; width: 100%; height: 100%; overflow: hidden;
 }
-/* The transition stage is the fixed device frame; layers fill it. */
-.screen-stage { width: 393px; height: 852px; margin: 0 auto; }
+/* The transition stage is the fixed device frame; it fills the locked
+   viewport height so inner scroll areas size correctly and nothing is
+   clipped on shorter windows. */
+.screen-stage { width: 393px; height: 100%; max-height: 100dvh; margin: 0 auto; }
 
 /* ═══ SHARED ═════════════════════════════════════════════════════════ */
 .hdr {
@@ -498,17 +508,17 @@ input, textarea { font-family: inherit; }
 .cfg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ═══ TODAY'S PLAN ═══════════════════════════════════════════════════ */
-.plan-screen { background: var(--violet); }
+.plan-screen { background: var(--violet); display: flex; flex-direction: column; }
 .plan-body-art {
   position: absolute; left: 178px; top: 16px; width: 426px; height: 821px;
   pointer-events: none; user-select: none; z-index: 0;
 }
 .plan-content {
-  position: relative; z-index: 1; padding: 38px 20px 24px;
+  position: relative; z-index: 1; padding: 38px 20px 118px;
   display: flex; flex-direction: column; gap: 16px;
-  max-height: calc(852px - 118px); overflow-y: auto;
+  flex: 1; min-height: 0; overflow-y: auto;
 }
-.plan-content.with-controls { max-height: calc(852px - 206px); }
+.plan-content.with-controls { padding-bottom: 206px; }
 .plan-back {
   width: 48px; height: 48px; border-radius: 1000px; border: none; cursor: pointer; padding: 0;
   background: var(--white); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
