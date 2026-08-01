@@ -274,7 +274,11 @@ export function Dumbbell({ color = '#111111', size = 24 }) {
 export function Quickstart({ color = '#FFFFFF', size = 24 }) {
   return (
     <svg {...box({ width: size, height: size })}>
-      <path d="M11 18L12 11H5.975L14 0H15L14 7H20.025L12 18H11ZM1 15V13H9.7L9.4 15H1ZM0 10V8H5.7L4.25 10H0ZM2 5V3H9.35L7.9 5H2Z" fill={color}/>
+      {/* Artwork spans ~0–20 x, 0–18 y; nudge it to sit centered in the
+          24×24 box so it's centered inside the round button. */}
+      <g transform="translate(2, 3)">
+        <path d="M11 18L12 11H5.975L14 0H15L14 7H20.025L12 18H11ZM1 15V13H9.7L9.4 15H1ZM0 10V8H5.7L4.25 10H0ZM2 5V3H9.35L7.9 5H2Z" fill={color}/>
+      </g>
     </svg>
   )
 }

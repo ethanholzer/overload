@@ -14,7 +14,8 @@ import {
 } from './data.js'
 import { muscleIcon } from './assets/muscleGraphics.js'
 import planBodyArt from './assets/plan-body.svg'
-import homeBg from './assets/HomepageImage.png'
+import homeBgDefault from './assets/HomepageDefault.png'
+import homeBgActive from './assets/HomepageActivePlan.png'
 import {
   ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Edit, History, Pause, ArrowRight,
@@ -565,10 +566,13 @@ function ExerciseHistory({ exercise, sessions, onBack }) {
 // This is inventory, not history: every workout the user has (including
 // the three seeded defaults) shows here from first launch, whether or
 // not it's ever been done.
-function WorkoutLogbook({ workouts, exerciseMap, onViewHistory, onKebab, onCreate, onBack }) {
+function WorkoutLogbook({ workouts, exerciseMap, sessions, onEdit, onKebab,
+  onOpenSession, onCreate, onBack }) {
+  const [tab, setTab] = useState('library')
+
   return (
     <div className="mw-screen">
-      {/* Compact header: violet back, centred title, violet Create pill. */}
+      {/* Compact header: navy back, centred title, navy Create pill. */}
       <div className="mw-header">
         <button className="mw-back" onClick={onBack} aria-label="Back">
           <SmallChevronLeft color="#FFFFFF" />
@@ -576,37 +580,79 @@ function WorkoutLogbook({ workouts, exerciseMap, onViewHistory, onKebab, onCreat
         <span className="mw-title">My Workouts</span>
         <button className="mw-create" onClick={onCreate}>Create</button>
       </div>
-      <div className="mw-scroll">
-        <span className="mw-listlabel">
-          WORKOUT LIST <span className="mw-listcount">({workouts.length} WORKOUT{workouts.length === 1 ? '' : 'S'})</span>
-        </span>
-        {workouts.length === 0 && (
-          <p className="log-book-empty">No workouts yet. Tap Create to build one.</p>
-        )}
-        {workouts.map(w => {
-          const exCount = (w.items || []).length
-          const times = w.timesCompleted || 0
-          return (
-            <div key={w.id} className="mw-card">
-              <div className="mw-card-top">
-                <div className="mw-card-info">
-                  <span className="mw-card-name">{w.name}</span>
-                  <div className="mw-badges">
-                    <span className="mw-badge completed">COMPLETED {times} TIME{times === 1 ? '' : 'S'}</span>
-                    <span className="mw-badge exercises">{exCount} EXERCISE{exCount === 1 ? '' : 'S'}</span>
+
+      {/* Library / History segmented toggle. */}
+      <div className="mw-toggle">
+        <button className={`mw-toggle-opt ${tab === 'library' ? 'on' : ''}`}
+          onClick={() => setTab('library')}>
+          Library <Edit color={tab === 'library' ? '#FFFFFF' : '#111111'} size={16} />
+        </button>
+        <button className={`mw-toggle-opt ${tab === 'history' ? 'on' : ''}`}
+          onClick={() => setTab('history')}>
+          History <History color={tab === 'history' ? '#FFFFFF' : '#111111'} size={16} />
+        </button>
+      </div>
+
+      {tab === 'library' ? (
+        <div className="mw-scroll">
+          {workouts.length === 0 && (
+            <p className="log-book-empty">No workouts yet. Tap Create to build one.</p>
+          )}
+          {workouts.map(w => {
+            const exCount = (w.items || []).length
+            const times = w.timesCompleted || 0
+            return (
+              <div key={w.id} className="mw-card">
+                <div className="mw-card-top">
+                  <div className="mw-card-info">
+                    <span className="mw-card-name">{w.name}</span>
+                    <div className="mw-badges">
+                      <span className="mw-badge completed">COMPLETED {times} TIME{times === 1 ? '' : 'S'}</span>
+                      <span className="mw-badge exercises">{exCount} EXERCISE{exCount === 1 ? '' : 'S'}</span>
+                    </div>
                   </div>
+                  <button className="mw-kebab" onClick={() => onKebab(w)} aria-label="Workout options">
+                    <KebabMenu color="#111111" />
+                  </button>
                 </div>
-                <button className="mw-kebab" onClick={() => onKebab(w)} aria-label="Workout options">
-                  <KebabMenu color="#111111" />
-                </button>
+                <div className="mw-card-actions">
+                  <button className="mw-history-btn" onClick={() => onEdit(w)}>Edit Workout</button>
+                </div>
               </div>
-              <div className="mw-card-actions">
-                <button className="mw-history-btn" onClick={() => onViewHistory(w)}>View History</button>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="mw-scroll wh-scroll">
+          {sessions.length === 0 && (
+            <p className="log-book-empty">No completed workouts yet. Finish one and it'll appear here.</p>
+          )}
+          {sessions.map(entry => (
+            <div key={entry.id} className="wh-group">
+              <span className="wh-date">{formatHistoryDate(entry.date)}</span>
+              <div className="mw-card">
+                <div className="mw-card-top">
+                  <div className="mw-card-info">
+                    <span className="mw-card-name">{entry.name}</span>
+                    <div className="mw-badges row">
+                      <span className="mw-badge exercises">
+                        {entry.exercises.length} EXERCISE{entry.exercises.length === 1 ? '' : 'S'}
+                      </span>
+                      {entry.edited && <span className="mw-badge edited">EDITED</span>}
+                    </div>
+                  </div>
+                  <button className="mw-kebab" onClick={() => onOpenSession(entry)} aria-label="Session options">
+                    <KebabMenu color="#111111" />
+                  </button>
+                </div>
+                <div className="mw-card-actions">
+                  <button className="mw-history-btn" onClick={() => onOpenSession(entry)}>View Workout</button>
+                </div>
               </div>
             </div>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -887,7 +933,11 @@ function StartPage({ plan, workoutsById, exerciseMap, pausedWorkoutId, workoutLo
 
   return (
     <div className="start-screen">
-      <img className="start-bg" src={homeBg} alt="" aria-hidden="true" />
+      {/* The photo fills the space above the fixed bottom component; its
+          bottom edge meets that component's top. A different crop is used
+          for each state so the framing fits. */}
+      <img className="start-bg" src={plan ? homeBgActive : homeBgDefault}
+        alt="" aria-hidden="true" />
 
       <div className="start-top">
         <span className="gf-logo">GoodFail</span>
@@ -995,7 +1045,7 @@ function WorkoutSelection({ workouts, exerciseMap, mode, onPick, onRest, onCreat
       {/* Compact header: centred title with Create on the right. */}
       <div className="sel-header">
         <button className="hdr-back white" onClick={onBack} aria-label="Back">
-          <SmallChevronLeft color="#6C5CE7" />
+          <SmallChevronLeft color="#FFFFFF" />
         </button>
         <span className="sel-title">{assigning ? 'Select a Workout' : 'Start a Workout'}</span>
         <button className="sel-create" onClick={onCreate}>Create</button>
@@ -1057,11 +1107,13 @@ function WorkoutSelection({ workouts, exerciseMap, mode, onPick, onRest, onCreat
 // day) gets a small yellow dot above the number.
 const WEEKDAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
-function Calendar({ value, onSelect }) {
+function Calendar({ startDate, endDate, onRange }) {
   const today = new Date()
-  const selected = value ? new Date(value) : today
-  // Which month is on screen — starts on the selected date's month.
-  const [view, setView] = useState({ y: selected.getFullYear(), m: selected.getMonth() })
+  const start = startDate ? new Date(startDate) : null
+  const end = endDate ? new Date(endDate) : null
+  const anchor = start || today
+  // Which month is on screen; navigable regardless of selection state.
+  const [view, setView] = useState({ y: anchor.getFullYear(), m: anchor.getMonth() })
   const rows = monthGrid(view.y, view.m)
   const title = MONTHS_LONG[view.m][0] + MONTHS_LONG[view.m].slice(1).toLowerCase() + ' ' + view.y
 
@@ -1071,6 +1123,24 @@ function Calendar({ value, onSelect }) {
     if (m > 11) { m = 0; y++ }
     setView({ y, m })
   }
+
+  const pick = (date) => {
+    const iso = date.toISOString()
+    // No start yet, or a start+end range already exists → begin fresh.
+    if (!start || (start && end)) {
+      onRange(iso, null)
+      return
+    }
+    // Have a start, no end → this tap sets the end. If it's on/before the
+    // start, treat it as a new start instead.
+    if (date < start || sameDay(date, start)) {
+      onRange(iso, null)
+    } else {
+      onRange(start.toISOString(), iso)
+    }
+  }
+
+  const inRange = (date) => start && end && date > start && date < end
 
   return (
     <div className="cal">
@@ -1089,13 +1159,15 @@ function Calendar({ value, onSelect }) {
       <div className="cal-grid">
         {rows.flat().map((date, i) => {
           if (!date) return <span key={i} className="cal-cell blank" />
-          const isSel = sameDay(date, selected)
+          const isStart = start && sameDay(date, start)
+          const isEnd = end && sameDay(date, end)
           const isToday = sameDay(date, today)
+          const between = inRange(date)
           return (
             <button key={i}
-              className={`cal-cell ${isSel ? 'sel' : ''}`}
-              onClick={() => onSelect(date.toISOString())}>
-              {isToday && !isSel && <span className="cal-today-dot" />}
+              className={`cal-cell ${isStart ? 'sel start' : ''} ${isEnd ? 'sel end' : ''} ${between ? 'between' : ''}`}
+              onClick={() => pick(date)}>
+              {isToday && !isStart && !isEnd && <span className="cal-today-dot" />}
               {date.getDate()}
             </button>
           )
@@ -1103,6 +1175,14 @@ function Calendar({ value, onSelect }) {
       </div>
     </div>
   )
+}
+
+// Human-readable timeframe line under the plan name.
+function timeframeLabel(startDate, endDate) {
+  if (!startDate) return null
+  const fmt = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  if (!endDate) return fmt(startDate)         // open-ended plan
+  return `${fmt(startDate)} — ${fmt(endDate)}`
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -1143,15 +1223,22 @@ function CreatePlan({ draft, workoutsById, exerciseMap, onChange, onPickDay, onS
               </button>
             )}
           </div>
-          {named && <span className="cp-split-line">{draft.days} DAY SPLIT</span>}
+          {named && (
+            <div className="cp-meta">
+              <span className="cp-split-line">{draft.days} DAY SPLIT</span>
+              {timeframeLabel(draft.startDate, draft.endDate) && (
+                <span className="cp-timeframe">{timeframeLabel(draft.startDate, draft.endDate)}</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="cp-divider" />
 
         <div className="cp-section">
-          <span className="row-label dark">STARTING DATE</span>
-          <Calendar value={draft.startDate}
-            onSelect={(iso) => onChange({ ...draft, startDate: iso })} />
+          <span className="row-label dark">PLAN TIMEFRAME</span>
+          <Calendar startDate={draft.startDate} endDate={draft.endDate}
+            onRange={(startIso, endIso) => onChange({ ...draft, startDate: startIso, endDate: endIso })} />
         </div>
 
         <div className="cp-section">
@@ -1690,7 +1777,7 @@ export default function App() {
 
   useEffect(() => {
     saveState({ exercises, workouts, plan, history, workoutLog, paused, seededWorkouts: true })
-  }, [exercises, workouts, plan, history, paused])
+  }, [exercises, workouts, plan, history, workoutLog, paused])
 
   const exerciseMap = useMemo(() => Object.fromEntries(exercises.map(e => [e.id, e])), [exercises])
   const workoutsById = useMemo(() => Object.fromEntries(workouts.map(w => [w.id, w])), [workouts])
@@ -1785,8 +1872,9 @@ export default function App() {
       id: uid(), name: '', days: PLAN_DEFAULT_DAYS,
       // undefined = not chosen yet (empty), null = explicit Rest day.
       slots: Array(PLAN_DEFAULT_DAYS).fill(undefined),
-      // The plan's rotation starts on this calendar date; defaults to today.
-      startDate: new Date().toISOString(),
+      // Timeframe is chosen on the calendar: first tap = start, second =
+      // end. Null until the user picks; an end date is optional.
+      startDate: null, endDate: null,
     })
     setScreen('createPlan')
   }
@@ -1797,8 +1885,19 @@ export default function App() {
     setScreen('createPlan')
   }
   const savePlan = () => {
+    const start = planDraft.startDate || new Date().toISOString()
+    const end = planDraft.endDate || null
+    // If both ends are set, the plan's length is the inclusive day span;
+    // otherwise it's open-ended and totalDays is left unset (the homepage
+    // falls back to rotation × cycles).
+    let totalDays = null
+    if (end) {
+      const atMidnight = (iso) => { const d = new Date(iso); d.setHours(0,0,0,0); return d.getTime() }
+      const ms = atMidnight(end) - atMidnight(start)
+      totalDays = Math.max(1, Math.round(ms / 86400000) + 1)
+    }
     setPlan({ ...planDraft, name: planDraft.name.trim(),
-      startDate: planDraft.startDate || new Date().toISOString() })
+      startDate: start, endDate: end, totalDays })
     setPlanDraft(null); setScreen('start')
   }
   const pickForSlot = (i) => {
@@ -1893,11 +1992,22 @@ export default function App() {
       return next
     })
     // Snapshot the whole session into the workout logbook timeline.
+    const baseWorkout = activeWorkoutId ? workoutsById[activeWorkoutId] : null
+    const performedExIds = sessionItems.map(it => it.exId)
+    // "Edited" = the exercises performed differ from the saved workout's
+    // base line-up (added, removed, swapped, or reordered).
+    let edited = false
+    if (baseWorkout) {
+      const baseExIds = (baseWorkout.items || []).map(it => it.exId)
+      edited = baseExIds.length !== performedExIds.length ||
+        baseExIds.some((id, i) => id !== performedExIds[i])
+    }
     const entry = {
       id: newSlotId(),
       date,
       workoutId: activeWorkoutId,
       name: (activeWorkoutId && workoutsById[activeWorkoutId]?.name) || 'Workout',
+      edited,
       exercises: sessionItems
         .map(it => ({ ex: exerciseMap[it.exId], sets: loggedSets[it.slotId] || [] }))
         .filter(e => e.ex && e.sets.length > 0)
@@ -2059,8 +2169,10 @@ export default function App() {
   if (screen === 'workoutLog') content = (
     <>
       <WorkoutLogbook workouts={workouts} exerciseMap={exerciseMap}
-        onViewHistory={(w) => { setHistoryWorkoutId(w.id); setScreen('workoutHistory') }}
+        sessions={[...workoutLog].sort((a, b) => new Date(b.date) - new Date(a.date))}
+        onEdit={(w) => { setWorkoutReturn('workoutLog'); startEdit(w.id) }}
         onKebab={(w) => setOptionsWorkoutId(w.id)}
+        onOpenSession={(entry) => { setOpenLogEntry(entry); setScreen('workoutLogDetail') }}
         onCreate={() => { setWorkoutReturn('workoutLog'); startCreate() }}
         onBack={() => setScreen('start')} />
       {optionsWorkout && (
@@ -2072,15 +2184,8 @@ export default function App() {
     </>
   )
 
-  if (screen === 'workoutHistory' && historyWorkout) content = (
-    <WorkoutHistory workout={historyWorkout}
-      sessions={workoutHistory(workoutLog, historyWorkout.id)}
-      onOpen={(entry) => { setOpenLogEntry(entry); setScreen('workoutLogDetail') }}
-      onBack={() => setScreen('workoutLog')} />
-  )
-
   if (screen === 'workoutLogDetail' && openLogEntry) content = (
-    <WorkoutLogDetail entry={openLogEntry} onBack={() => setScreen('workoutHistory')} />
+    <WorkoutLogDetail entry={openLogEntry} onBack={() => setScreen('workoutLog')} />
   )
 
   if (screen === 'exerciseLog') content = (
